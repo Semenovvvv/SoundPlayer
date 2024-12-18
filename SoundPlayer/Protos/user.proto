@@ -1,0 +1,30 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "SoundPlayer";
+
+package soundplayer;
+
+service UserProto {
+  rpc GetUserProfile (UserProfileRequest) returns (UserProfileResponse);
+  rpc UpdateUserProfile (UpdateUserProfileRequest) returns (UpdateUserProfileResponse);
+}
+
+message UserProfileRequest {
+  int32 userId = 1;
+}
+
+message UserProfileResponse {
+  int32 userId = 1;
+  string username = 2;
+  string email = 3;
+}
+
+message UpdateUserProfileRequest {
+  int32 userId = 1;
+  string newUsername = 2;
+  string newEmail = 3;
+}
+
+message UpdateUserProfileResponse {
+  bool success = 1;
+}

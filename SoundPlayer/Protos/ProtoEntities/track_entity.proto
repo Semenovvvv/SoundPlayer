@@ -1,0 +1,11 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "SoundPlayer";
+
+package soundplayer;
+
+message TrackEntity {
+  int32 id = 1;
+  string title = 2;
+  string uploadedBy = 3;
+}

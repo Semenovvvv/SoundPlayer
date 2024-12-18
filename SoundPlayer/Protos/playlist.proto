@@ -1,0 +1,50 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "SoundPlayer";
+
+package soundplayer;
+
+import "Protos/ProtoEntities/track_entity.proto";
+
+service PlaylistProto {
+  rpc CreatePlaylist (CreatePlaylistRequest) returns (CreatePlaylistResponse);
+  rpc AddTrackToPlaylist (AddTrackRequest) returns (AddTrackResponse);
+  rpc RemoveTrackFromPlaylist (RemoveTrackRequest) returns (RemoveTrackResponse);
+  rpc GetPlaylist (GetPlaylistRequest) returns (PlaylistResponse);
+}
+
+message CreatePlaylistRequest {
+  string name = 1;
+  int32 userId = 2;
+}
+
+message CreatePlaylistResponse {
+  int32 playlistId = 1;
+}
+
+message AddTrackRequest {
+  int32 playlistId = 1;
+  int32 trackId = 2;
+}
+
+message AddTrackResponse {
+  bool success = 1;
+}
+
+message RemoveTrackRequest {
+  int32 playlistId = 1;
+  int32 trackId = 2;
+}
+
+message RemoveTrackResponse {
+  bool success = 1;
+}
+
+message GetPlaylistRequest {
+  int32 playlistId = 1;
+}
+
+message PlaylistResponse {
+  string name = 1;
+  repeated TrackEntity tracks = 2;
+}

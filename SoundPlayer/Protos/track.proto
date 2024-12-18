@@ -1,0 +1,47 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "SoundPlayer";
+
+package soundplayer;
+
+import "Protos/ProtoEntities/track_entity.proto";
+
+service TrackProto {
+  rpc UploadTrack (UploadTrackRequest) returns (UploadTrackResponse);
+  rpc GetTrackList (VoidRequest) returns (TrackListResponse);
+  rpc DeleteTrack (DeleteTrackRequest) returns (DeleteTrackResponse);
+  rpc StreamTrack (StreamTrackRequest) returns (stream TrackChunk);
+}
+
+message UploadTrackRequest {
+  string title = 1;
+  bytes audioData = 2;
+}
+
+message UploadTrackResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message TrackListResponse {
+  repeated TrackEntity tracks = 1;
+}
+
+message DeleteTrackRequest {
+  int32 trackId = 1;
+}
+
+message DeleteTrackResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message StreamTrackRequest {
+  int32 trackId = 1;
+}
+
+message TrackChunk {
+  bytes audioData = 1;
+}
+
+message VoidRequest{ }
