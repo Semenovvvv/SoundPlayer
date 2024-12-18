@@ -1,9 +1,13 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SoundPlayer.DAL;
+using SoundPlayer.Domain.Entities;
 using SoundPlayer.Domain.Interfaces;
+using SoundPlayer.Extensions;
 using SoundPlayer.Services;
 
 namespace SoundPlayer
@@ -34,7 +38,15 @@ namespace SoundPlayer
                     };
                 });
 
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options => options.DefaultPolicy = 
+                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                    .RequireAuthenticatedUser()
+                    .Build());
+
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
+                .AddEntityFrameworkStores<AppDbContext>()
+                .AddUserManager<UserManager<ApplicationUser>>()
+                .AddSignInManager<SignInManager<ApplicationUser>>();
 
             builder.Services.AddServices();
 
@@ -59,17 +71,6 @@ namespace SoundPlayer
             app.MapGrpcService<UserGrpcService>();
 
             app.Run();
-        }
-    }
-
-    public static class ServiceProviderExtensions
-    {
-        public static void AddServices(this IServiceCollection services)
-        {
-            services.AddTransient<AuthService>();
-            services.AddTransient<PlaylistService>();
-            services.AddTransient<TrackService>();
-            services.AddTransient<UserService>();
         }
     }
 }
