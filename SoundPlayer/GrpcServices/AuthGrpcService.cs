@@ -33,5 +33,10 @@ namespace SoundPlayer.Services
 
             return new LoginResponse { Token = token };
         }
+
+        public override async Task<HelloResponse> Hello(HelloRequest request, ServerCallContext context)
+        {
+            return new HelloResponse { Name = $"Hello, {request.Name} "};
+        }
     }
 }

@@ -25,11 +25,8 @@ namespace SoundPlayer.Services
         {
             var user = new ApplicationUser { UserName = dto.Username, Email = dto.Email };
             var result = await _userManager.CreateAsync(user, dto.Password);
-            if (result.Succeeded)
-            {
-                return true;
-            }
-            return false;
+
+            return result.Succeeded;
         }
 
         public async Task<string> LoginUser(LoginDto dto)
@@ -56,7 +53,7 @@ namespace SoundPlayer.Services
                 new Claim(ClaimTypes.Name, user.UserName)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(

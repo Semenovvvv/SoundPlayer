@@ -5,43 +5,62 @@ option csharp_namespace = "SoundPlayer";
 package soundplayer;
 
 import "Protos/ProtoEntities/track_entity.proto";
+import "google/protobuf/empty.proto";
 
 service TrackProto {
-  rpc UploadTrack (UploadTrackRequest) returns (UploadTrackResponse);
-  rpc GetTrackList (VoidRequest) returns (TrackListResponse);
-  rpc DeleteTrack (DeleteTrackRequest) returns (DeleteTrackResponse);
-  rpc StreamTrack (StreamTrackRequest) returns (stream TrackChunk);
+  rpc UploadTrackChunks (stream AudioChunk) returns (MessageResponse);
+  rpc UploadTrackInfo (TrackInfo) returns (MessageResponse);
+  rpc UploadTrackFormat (TrackFormat) returns (MessageResponse);
+  rpc GetTrackList (google.protobuf.Empty) returns (TrackListResponse);
+  rpc DeleteTrack (DeleteTrackRequest) returns (MessageResponse);
+  rpc StreamTrack (StreamTrackRequest) returns (stream AudioChunk);
+  rpc GetTrackFormat (google.protobuf.Empty) returns (TrackFormat);
 }
 
-message UploadTrackRequest {
-  string title = 1;
-  bytes audioData = 2;
+// UploadTrackFormat
+message UploadTrackFormatRequest{
+}
+message UploadTrackFormatResponse{
 }
 
-message UploadTrackResponse {
-  bool success = 1;
-  string message = 2;
-}
-
+// GetTrackList
 message TrackListResponse {
   repeated TrackEntity tracks = 1;
 }
 
+// DeleteTrack
 message DeleteTrackRequest {
   int32 trackId = 1;
 }
 
-message DeleteTrackResponse {
-  bool success = 1;
-  string message = 2;
-}
-
+// StreamTrack
 message StreamTrackRequest {
   int32 trackId = 1;
 }
 
-message TrackChunk {
-  bytes audioData = 1;
+message AudioChunk {
+  bytes data = 1;
+  string fileName = 2;
+  bool isFinalChunk = 3;
 }
 
-message VoidRequest{ }
+message TrackFormat {
+  int32 AverageBytesPerSecond = 1;
+  int32 BitsPerSample = 2;
+  int32 BlockAlign = 3;
+  int32 Channels = 4;
+  int32 ExtraSize = 5;
+  int32 SampleRate = 6;
+  string Encoding = 7;
+}
+
+message MessageResponse{
+	bool success = 1;
+	string message = 2;
+}
+
+message TrackInfo{
+	string title = 1;
+	string name = 2;
+	int32 userId = 3;
+}

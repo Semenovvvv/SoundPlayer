@@ -18,6 +18,8 @@ namespace SoundPlayer
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddLogging();
+
             builder.Services.AddGrpc();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -38,7 +40,7 @@ namespace SoundPlayer
                     };
                 });
 
-            builder.Services.AddAuthorization(options => options.DefaultPolicy = 
+            builder.Services.AddAuthorization(options => options.DefaultPolicy =
                 new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
                     .RequireAuthenticatedUser()
                     .Build());
@@ -51,6 +53,7 @@ namespace SoundPlayer
             builder.Services.AddServices();
 
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<ITrackService, TrackService>();
 
             var app = builder.Build();
 

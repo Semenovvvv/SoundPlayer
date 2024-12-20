@@ -16,6 +16,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
+		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
 	</ItemGroup>
 
@@ -30,6 +31,10 @@
 		<Protobuf Include="Protos\track.proto" GrpcService="Server" />
 		<Protobuf Include="Protos\user.proto" GrpcService="Server" />
 		<Protobuf Include="Protos\ProtoEntities\track_entity.proto" GrpcServices="None" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Models\" />
 	</ItemGroup>
 
 </Project>
