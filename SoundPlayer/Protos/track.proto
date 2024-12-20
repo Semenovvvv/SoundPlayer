@@ -10,7 +10,8 @@ import "google/protobuf/empty.proto";
 service TrackProto {
   rpc UploadTrackChunks (stream AudioChunk) returns (MessageResponse);
   rpc UploadTrackInfo (TrackInfo) returns (MessageResponse);
-  rpc UploadTrackFormat (TrackFormat) returns (MessageResponse);
+  rpc GetTrackInfo(TrackId) returns (TrackInfo);
+  rpc GetTrackChunks(TrackId) returns (stream AudioChunk);
   rpc GetTrackList (google.protobuf.Empty) returns (TrackListResponse);
   rpc DeleteTrack (DeleteTrackRequest) returns (MessageResponse);
   rpc StreamTrack (StreamTrackRequest) returns (stream AudioChunk);
@@ -63,4 +64,8 @@ message TrackInfo{
 	string title = 1;
 	string name = 2;
 	int32 userId = 3;
+}
+
+message TrackId{
+	int32 id = 1;
 }

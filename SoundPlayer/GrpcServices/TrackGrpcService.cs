@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using Google.Protobuf;
+using Grpc.Core;
 using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Interfaces;
 
@@ -69,6 +70,50 @@ namespace SoundPlayer.Services
                     Message = "Failed to upload the file.",
                     Success = false
                 };
+            }
+        }
+
+        public override async Task<TrackInfo> GetTrackInfo(TrackId request, ServerCallContext context)
+        {
+            var trackDto = await _trackService.GetTrackInfo(request.Id);
+            var trackInfo = new TrackInfo()
+            {
+                Title = trackDto.Title,
+                UserId = trackDto.UploadedByUserId
+            };
+
+            return trackInfo;
+        }
+
+        public override async Task GetTrackChunks(TrackId request, IServerStreamWriter<AudioChunk> responseStream, ServerCallContext context)
+        {
+            try
+            {
+                await _trackService.GetTrackChunks(
+                    request.Id,
+                    async chunk =>
+                    {
+                        var trackChunk = new TrackChunk
+                        {
+                            Data = chunk
+                        };
+
+                        await responseStream.WriteAsync(new AudioChunk()
+                        {
+                            Data = ByteString.CopyFrom(trackChunk.Data),
+                            FileName = "",
+                            IsFinalChunk = trackChunk.IsFinishChunk
+
+                        });
+                    });
+            }
+            catch (FileNotFoundException ex)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                throw new RpcException(new Status(StatusCode.Internal, $"Ошибка передачи трека: {ex.Message}"));
             }
         }
     }
