@@ -13,25 +13,25 @@ namespace SoundPlayer.Services
         }
         public override async Task<RegisterResponse> Register(RegisterRequest request, ServerCallContext context)
         {
-            var success = await _authService.RegisterUser(new UserDto
+            var response = await _authService.RegisterUser(new UserDto
             {
                 Username = request.Username,
                 Email = request.Email,
                 Password = request.Password
             });
 
-            return new RegisterResponse { Success = success };
+            return new RegisterResponse { Success = response.IsSuccess };
         }
 
         public override async Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
         {
-            var token = await _authService.LoginUser(new LoginDto
+            var response = await _authService.LoginUser(new LoginDto
             {
                 Email = request.Email,
                 Password = request.Password
             });
 
-            return new LoginResponse { Token = token };
+            return new LoginResponse { Token = response.Result };
         }
 
         public override async Task<HelloResponse> Hello(HelloRequest request, ServerCallContext context)

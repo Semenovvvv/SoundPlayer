@@ -14,7 +14,7 @@ namespace SoundPlayer.DAL.Configurations
                 .WithMany(x => x.UploadedTracks)
                 .HasForeignKey(x => x.UploadedByUserId);
 
-            builder.Property(x => x.Title)
+            builder.Property(x => x.Name)
                 .HasMaxLength(50)
                 .IsRequired();
 

@@ -6,6 +6,8 @@ package soundplayer;
 
 message TrackEntity {
   int32 id = 1;
-  string title = 2;
-  string uploadedBy = 3;
+  string name = 2;
+  string userEmail = 3;
+  string userName = 4;
+  int32 duration = 5;
 }

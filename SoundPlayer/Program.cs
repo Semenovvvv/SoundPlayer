@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SoundPlayer.DAL;
 using SoundPlayer.Domain.Entities;
-using SoundPlayer.Domain.Interfaces;
 using SoundPlayer.Extensions;
 using SoundPlayer.Services;
 
@@ -18,11 +17,9 @@ namespace SoundPlayer
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddLogging();
-
             builder.Services.AddGrpc();
 
-            builder.Services.AddDbContext<AppDbContext>(options =>
+            builder.Services.AddDbContextFactory<AppDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -52,8 +49,9 @@ namespace SoundPlayer
 
             builder.Services.AddServices();
 
-            builder.Services.AddScoped<IAuthService, AuthService>();
-            builder.Services.AddScoped<ITrackService, TrackService>();
+            //builder.Services.AddLogging();
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
 
             var app = builder.Build();
 

@@ -1,5 +1,4 @@
-﻿using Grpc.Core;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SoundPlayer.Application.Services;
 using SoundPlayer.DAL;
@@ -12,15 +11,20 @@ namespace SoundPlayer.Services
 {
     public class TrackService : ITrackService
     {
-        private readonly FileService _fileService;
-        private readonly AppDbContext _dbContext;
+        private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+        private readonly ILogger<TrackService> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        
-        public TrackService(AppDbContext dbContext, UserManager<ApplicationUser> userManager)
+        private readonly FileService _fileService;
+
+        public TrackService(
+            IDbContextFactory<AppDbContext> dbContextFactory,
+            ILogger<TrackService> logger,
+            UserManager<ApplicationUser> userManager)
         {
             _fileService = new FileService();
             _userManager = userManager;
-            _dbContext = dbContext;
+            _dbContextFactory = dbContextFactory;
+            _logger = logger;
         }
 
         public async Task SaveTrackChunkInDirectory(TrackChunk audioChunk, Guid trackGuid)
@@ -30,57 +34,100 @@ namespace SoundPlayer.Services
 
         public async Task<BaseResponse> SaveTrackInfo(TrackDto dto)
         {
-            var user = await _dbContext.Users
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == dto.UploadedByUserId);
-
-            if (user == null)
+            try
             {
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+                var user = await _userManager.FindByEmailAsync(dto.UserEmail);
+
+                //var user = await dbContext.Users
+                //    .AsNoTracking()
+                //    .FirstOrDefaultAsync(x => x.Email == dto.UserEmail);
+
+                if (user is null)
+                {
+                    _logger.LogWarning($"Track information {dto.Name} don't loaded. User not found");
+                    return new BaseResponse
+                    {
+                        IsSuccess = false,
+                        Message = $"Track information {dto.Name} don't loaded. User not found"
+                    };
+                }
+
+                var track = new Track()
+                {
+                    Name = dto.Name,
+                    UploadDate = DateTime.UtcNow,
+                    UploadedByUserId = user.Id,
+                    Duration = dto.Duration,
+                    FilePath = ""
+                };
+
+                await dbContext.Tracks.AddAsync(track);
+                await dbContext.SaveChangesAsync();
+
+                _logger.LogInformation($"Track information {track.Name} was loaded");
+
+                return new BaseResponse
+                {
+                    IsSuccess = true,
+                    Message = $"Track information {track.Name} was loaded"
+                };
+            }
+            catch (Exception e)
+            {
+                _logger.LogInformation($"Track information {dto.Name} wasn't loaded. Exception : {e.Message}");
+
                 return new BaseResponse
                 {
                     IsSuccess = false,
-                    Message = "Не удалось загрузить информацию о треке. Пользователь отсутствует."
+                    Message = $"Track information {dto.Name} wasn't loaded. Exception : {e.Message}"
                 };
             }
-
-            var track = new Track()
-            {
-                Title = dto.Title,
-                UploadDate = DateTime.UtcNow,
-                UploadedByUserId = dto.UploadedByUserId,
-            };
-
-            await _dbContext.Tracks.AddAsync(track);
-            await _dbContext.SaveChangesAsync();
-
-            return new BaseResponse
-            {
-                IsSuccess = true,
-                Message = "Информация о треке успешно загружена."
-            };
         }
 
-        public async Task<TrackDto> GetTrackInfo(int id)
+        public async Task<BaseResponse<TrackDto>> GetTrackInfo(int id)
         {
-            var track = await _dbContext.Tracks
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == id);
-
-            if (track is null)
+            try
             {
-                return new TrackDto();
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+                var track = await dbContext.Tracks
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.Id == id);
+
+                if (track is null)
+                {
+                    throw new Exception("Track not found");
+                }
+
+                return new BaseResponse<TrackDto>()
+                {
+                    IsSuccess = true,
+                    Result = new TrackDto()
+                    {
+                        Name = track.Name,
+                        UserEmail = track.UploadedByUser.Email,
+                        Duration = track.Duration
+                    }
+                };
             }
-
-            return new TrackDto()
+            catch (Exception e)
             {
-                Title = track.Title,
-                UploadedByUserId = track.UploadedByUserId
-            };
+                _logger.LogWarning($"Track 'trackId = {id}' not getted. Exception : {e.Message}");
+                return new BaseResponse<TrackDto>()
+                {
+                    Message = e.Message,
+                    IsSuccess = false
+                };
+            }
         }
 
         public async Task GetTrackChunks(int trackId, Func<byte[], Task> processChunk)
         {
-            var track = await _dbContext.Tracks.FirstOrDefaultAsync(t => t.Id == trackId);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+            var track = await dbContext.Tracks
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.Id == trackId);
             //if (track == null)
             //{
             //    throw new FileNotFoundException($"Трек с ID {trackId} не найден.");
@@ -92,6 +139,60 @@ namespace SoundPlayer.Services
             //}
 
             await _fileService.GetBytes(track.FilePath, track.UploadDate.ToString("yyyy_MM_dd"), processChunk);
+        }
+
+        public async Task<BaseResponse<PaginatedResponse<TrackDto>>> GetTrackListByName(
+            string trackName, 
+            int pageNumber, 
+            int pageSize)
+        {
+            try
+            {
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+
+                var query = dbContext.Tracks
+                    .AsNoTracking()
+                    .Where(t => EF.Functions.ILike(t.Name, $"%{trackName}%"));
+
+                var totalRescord = await query.CountAsync();
+
+                var tracks = await query
+                    .OrderBy(t => t.Name)
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(t => new TrackDto
+                    {
+                        Id = t.Id,
+                        Name = t.Name,
+                        UserEmail = t.UploadedByUser.Email,
+                        UserName = t.UploadedByUser.UserName,
+                        Duration = t.Duration
+                    })
+                    .ToListAsync();
+
+                return new BaseResponse<PaginatedResponse<TrackDto>>()
+                {
+                    IsSuccess = true,
+                    Result = new PaginatedResponse<TrackDto>()
+                    {
+                        Items = tracks,
+                        TotalCount = totalRescord,
+                        PageNumber = pageNumber,
+                        PageSize = pageSize
+                    }
+                };
+
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning($"Error while getting tracks by name '{trackName}': {e.Message}");
+
+                return new BaseResponse<PaginatedResponse<TrackDto>>
+                {
+                    IsSuccess = false,
+                    Message = $"Error while getting tracks: {e.Message}"
+                };
+            }
         }
     }
 }

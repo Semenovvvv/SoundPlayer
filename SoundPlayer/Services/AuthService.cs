@@ -6,41 +6,94 @@ using SoundPlayer.Domain.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using SoundPlayer.Domain.BE;
 
 namespace SoundPlayer.Services
 {
     public class AuthService : IAuthService
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
-        public AuthService(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        private readonly ILogger<AuthService> _logger;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
+        
+        public AuthService(
+            UserManager<ApplicationUser> userManager, 
+            SignInManager<ApplicationUser> signInManager, 
+            IConfiguration configuration, 
+            ILogger<AuthService> logger)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _logger = logger;
         }
 
-        public async Task<bool> RegisterUser(UserDto dto)
+        public async Task<BaseResponse<bool>> RegisterUser(UserDto dto)
         {
-            var user = new ApplicationUser { UserName = dto.Username, Email = dto.Email };
-            var result = await _userManager.CreateAsync(user, dto.Password);
-
-            return result.Succeeded;
-        }
-
-        public async Task<string> LoginUser(LoginDto dto)
-        {
-            var user = await _userManager.FindByEmailAsync(dto.Email);
-            if (user is null) return "User not found";
-
-            var result = await _signInManager.PasswordSignInAsync(user, dto.Password, false, false);
-            if (result.Succeeded)
+            try
             {
-                var token = GenerateJwtToken(user);
-                return token;
+                var user = new ApplicationUser
+                {
+                    UserName = dto.Username, 
+                    Email = dto.Email,
+                    CreatedTime = DateTime.UtcNow
+                };
+                var result = await _userManager.CreateAsync(user, dto.Password);
+
+                _logger.LogInformation($"User {dto.Email} registered.");
+
+                return new BaseResponse<bool>()
+                {
+                    Result = result.Succeeded,
+                    IsSuccess = true
+                };
             }
-            return "Invalid login attempt";
+            catch (Exception e)
+            {
+                _logger.LogInformation($"User {dto.Email} not registered. Exception : {e.Message}");
+                return new BaseResponse<bool>()
+                {
+                    IsSuccess = false,
+                    ErrorMessage = e.Message
+                };
+            }
+        }
+
+        public async Task<BaseResponse<string>> LoginUser(LoginDto dto)
+        {
+            try
+            {
+                var user = await _userManager.FindByEmailAsync(dto.Email);
+                if (user is null)
+                {
+                    throw new Exception("User not found!");
+                }
+
+                var result = await _signInManager.PasswordSignInAsync(user, dto.Password, false, false);
+
+                if (result.Succeeded)
+                {
+                    var token = GenerateJwtToken(user);
+                    _logger.LogInformation($"User '{dto.Email}' logined.");
+                    return new BaseResponse<string>()
+                    {
+                        IsSuccess = true,
+                        Result = token
+                    };
+                }
+
+                throw new Exception();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning($"User '{dto.Email}' not logined. Exception : {e.Message}");
+                return new BaseResponse<string>()
+                {
+                    IsSuccess = false,
+                    ErrorMessage = e.Message
+                };
+            }
         }
 
 

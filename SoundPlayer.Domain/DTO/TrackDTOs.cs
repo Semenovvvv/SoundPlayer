@@ -2,7 +2,10 @@
 {
     public class TrackDto
     {
-        public string Title { get; set; }
-        public int UploadedByUserId { get; set; } 
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string UserEmail { get; set; }
+        public string UserName { get; set; }
+        public TimeSpan Duration { get; set; }
     }
 }

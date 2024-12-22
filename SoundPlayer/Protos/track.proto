@@ -12,7 +12,7 @@ service TrackProto {
   rpc UploadTrackInfo (TrackInfo) returns (MessageResponse);
   rpc GetTrackInfo(TrackId) returns (TrackInfo);
   rpc GetTrackChunks(TrackId) returns (stream AudioChunk);
-  rpc GetTrackList (google.protobuf.Empty) returns (TrackListResponse);
+  rpc GetTrackList (GetTracksRequest) returns (GetTracksResponse);
   rpc DeleteTrack (DeleteTrackRequest) returns (MessageResponse);
   rpc StreamTrack (StreamTrackRequest) returns (stream AudioChunk);
   rpc GetTrackFormat (google.protobuf.Empty) returns (TrackFormat);
@@ -25,8 +25,17 @@ message UploadTrackFormatResponse{
 }
 
 // GetTrackList
-message TrackListResponse {
-  repeated TrackEntity tracks = 1;
+message GetTracksRequest {
+    string trackName = 1;
+    int32 pageNumber = 2;
+    int32 pageSize = 3;
+}
+
+message GetTracksResponse {
+    int32 totalCount = 1;
+    int32 pageNumber = 2;
+    int32 pageSize = 3;
+    repeated TrackEntity tracks = 4;
 }
 
 // DeleteTrack
@@ -61,9 +70,9 @@ message MessageResponse{
 }
 
 message TrackInfo{
-	string title = 1;
-	string name = 2;
-	int32 userId = 3;
+	string name = 1;
+	string userEmail = 2;
+	int32 durationInSeconds = 3;
 }
 
 message TrackId{

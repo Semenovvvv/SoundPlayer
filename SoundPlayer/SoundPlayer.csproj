@@ -33,8 +33,4 @@
 		<Protobuf Include="Protos\ProtoEntities\track_entity.proto" GrpcServices="None" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="Models\" />
-	</ItemGroup>
-
 </Project>

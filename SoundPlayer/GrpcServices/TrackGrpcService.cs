@@ -20,10 +20,11 @@ namespace SoundPlayer.Services
         {
             try
             {
-                _trackService.SaveTrackInfo(new TrackDto()
+                await _trackService.SaveTrackInfo(new TrackDto()
                 {
-                    Title = request.Title,
-                    UploadedByUserId = request.UserId
+                    Name = request.Name,
+                    UserEmail = request.UserEmail,
+                    Duration = TimeSpan.FromSeconds(request.DurationInSeconds) 
                 });
             }
             catch (Exception e)
@@ -75,11 +76,12 @@ namespace SoundPlayer.Services
 
         public override async Task<TrackInfo> GetTrackInfo(TrackId request, ServerCallContext context)
         {
-            var trackDto = await _trackService.GetTrackInfo(request.Id);
+            var response = await _trackService.GetTrackInfo(request.Id);
+            var trackDto = response.Result;
             var trackInfo = new TrackInfo()
             {
-                Title = trackDto.Title,
-                UserId = trackDto.UploadedByUserId
+                Name = trackDto.Name,
+                UserEmail = trackDto.UserEmail
             };
 
             return trackInfo;
@@ -115,6 +117,31 @@ namespace SoundPlayer.Services
             {
                 throw new RpcException(new Status(StatusCode.Internal, $"Ошибка передачи трека: {ex.Message}"));
             }
+        }
+
+        public override async Task<GetTracksResponse> GetTrackList(GetTracksRequest request, ServerCallContext context)
+        {
+            var result = await _trackService.GetTrackListByName(request.TrackName, request.PageNumber, request.PageSize);
+
+            if (!result.IsSuccess)
+            {
+                throw new RpcException(new Status(StatusCode.Internal, result.Message));
+            }
+
+            return new GetTracksResponse
+            {
+                TotalCount = result.Result.TotalCount,
+                PageNumber = result.Result.PageNumber,
+                PageSize = result.Result.PageSize,
+                Tracks = { result.Result.Items.Select(t => new TrackEntity
+                {
+                    Id = t. Id,
+                    Name = t.Name,
+                    UserEmail = t.UserEmail,
+                    UserName = t.UserName,
+                    Duration = (int)t.Duration.TotalSeconds,
+                }) }
+            };
         }
     }
 }
