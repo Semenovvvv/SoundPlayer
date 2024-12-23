@@ -1,0 +1,13 @@
+{
+  "details": {
+    "methodFqn": "soundplayer.TrackProto.StreamTrack"
+  },
+  "requests": [
+    {
+      "location": "StreamTrack-request.json"
+    }
+  ],
+  "operationType": "serverStreaming",
+  "invokerName": "grpc",
+  "importStreamId": "9fcf3900-b44b-4a51-9e26-75c8438f5411"
+}

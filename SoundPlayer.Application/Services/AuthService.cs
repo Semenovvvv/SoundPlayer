@@ -7,8 +7,10 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using SoundPlayer.Domain.BE;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
-namespace SoundPlayer.Services
+namespace SoundPlayer.Application.Services
 {
     public class AuthService : IAuthService
     {

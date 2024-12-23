@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoundPlayer.DAL", "SoundPla
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoundPlayer.Domain", "SoundPlayer.Domain\SoundPlayer.Domain.csproj", "{220D7921-37D7-4E48-AB83-FCCCD8CABFA4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoundPlayer.Application", "SoundPlayer.Application\SoundPlayer.Application.csproj", "{7EFA62BC-98DE-4D0F-B020-66A14C1E0B64}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{220D7921-37D7-4E48-AB83-FCCCD8CABFA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{220D7921-37D7-4E48-AB83-FCCCD8CABFA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{220D7921-37D7-4E48-AB83-FCCCD8CABFA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EFA62BC-98DE-4D0F-B020-66A14C1E0B64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EFA62BC-98DE-4D0F-B020-66A14C1E0B64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EFA62BC-98DE-4D0F-B020-66A14C1E0B64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EFA62BC-98DE-4D0F-B020-66A14C1E0B64}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

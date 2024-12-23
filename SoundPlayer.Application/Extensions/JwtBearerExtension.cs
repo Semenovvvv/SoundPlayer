@@ -4,10 +4,11 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using SoundPlayer.Domain.Entities;
 
-namespace SoundPlayer.Extensions
+namespace SoundPlayer.Application.Extensions
 {
     public static class JwtBearerExtension
     {

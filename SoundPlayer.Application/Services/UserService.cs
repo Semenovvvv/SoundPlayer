@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Entities;
 using SoundPlayer.Domain.Interfaces;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
-namespace SoundPlayer.Services
+namespace SoundPlayer.Application.Services
 {
     public class UserService : IUserService
     {
@@ -21,8 +18,6 @@ namespace SoundPlayer.Services
             _signInManager = signInManager;
             _configuration = configuration;
         }
-
-        
 
         public async Task<ApplicationUser> GetUserProfile(string userId)
         {

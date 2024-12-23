@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SoundPlayer.Application.Services;
 using SoundPlayer.DAL;
 using SoundPlayer.Domain.BE;
@@ -7,7 +8,7 @@ using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Entities;
 using SoundPlayer.Domain.Interfaces;
 
-namespace SoundPlayer.Services
+namespace SoundPlayer.Application.Services
 {
     public class TrackService : ITrackService
     {

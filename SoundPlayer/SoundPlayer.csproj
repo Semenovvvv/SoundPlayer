@@ -10,6 +10,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Grpc.AspNetCore" Version="2.57.0" />
+		<PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.67.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
 			<PrivateAssets>all</PrivateAssets>
@@ -21,6 +22,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\SoundPlayer.Application\SoundPlayer.Application.csproj" />
 		<ProjectReference Include="..\SoundPlayer.DAL\SoundPlayer.DAL.csproj" />
 		<ProjectReference Include="..\SoundPlayer.Domain\SoundPlayer.Domain.csproj" />
 	</ItemGroup>
