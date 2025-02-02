@@ -8,13 +8,12 @@ using SoundPlayer.Controllers;
 using SoundPlayer.DAL;
 using SoundPlayer.Domain.Entities;
 using SoundPlayer.Extensions;
-using SoundPlayer.GrpcServices;
 
 namespace SoundPlayer
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -57,7 +56,8 @@ namespace SoundPlayer
             builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
                 .AddEntityFrameworkStores<AppDbContext>()
                 .AddUserManager<UserManager<ApplicationUser>>()
-                .AddSignInManager<SignInManager<ApplicationUser>>();
+                .AddSignInManager<SignInManager<ApplicationUser>>()
+                .AddRoleManager<RoleManager<IdentityRole<int>>>();
 
             builder.Services.AddServices();
 
@@ -65,6 +65,21 @@ namespace SoundPlayer
             builder.Logging.AddConsole();
 
             var app = builder.Build();
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    await SeedData.Initialize(services);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred while seeding the database.");
+                }
+            }
+
 
             if (app.Environment.IsDevelopment())
             {

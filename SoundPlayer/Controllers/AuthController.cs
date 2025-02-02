@@ -3,15 +3,17 @@ using Grpc.Core;
 using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Interfaces;
 
-namespace SoundPlayer.GrpcServices
+namespace SoundPlayer.Controllers
 {
     public class AuthController : AuthProto.AuthProtoBase
     {
         private readonly IAuthService _authService;
+
         public AuthController(IAuthService authService)
         {
             _authService = authService;
         }
+
         public override async Task<RegisterResponse> Register(RegisterRequest request, ServerCallContext context)
         {
             var response = await _authService.RegisterUser(new UserDto

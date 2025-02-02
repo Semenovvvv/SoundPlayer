@@ -9,6 +9,7 @@ using System.Text;
 using SoundPlayer.Domain.BE;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using SoundPlayer.Domain.Common;
 
 namespace SoundPlayer.Application.Services
 {
@@ -18,11 +19,11 @@ namespace SoundPlayer.Application.Services
         private readonly ILogger<AuthService> _logger;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        
+
         public AuthService(
-            UserManager<ApplicationUser> userManager, 
-            SignInManager<ApplicationUser> signInManager, 
-            IConfiguration configuration, 
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IConfiguration configuration,
             ILogger<AuthService> logger)
         {
             _userManager = userManager;
@@ -35,13 +36,23 @@ namespace SoundPlayer.Application.Services
         {
             try
             {
+                var existingUserByEmail = await _userManager.FindByEmailAsync(dto.Email);
+                if (existingUserByEmail != null) throw new Exception("User with this email already exists.");
+
+                var existingUserByLogin = await _userManager.FindByNameAsync(dto.Login);
+                if (existingUserByLogin != null) throw new Exception("User with this login already exists.");
+
                 var user = new ApplicationUser
                 {
-                    UserName = dto.Login, 
+                    UserName = dto.Login,
                     Email = dto.Email,
                     CreatedTime = DateTime.UtcNow
                 };
                 var result = await _userManager.CreateAsync(user, dto.Password);
+
+                if (!result.Succeeded) throw new Exception("Invalid data");
+
+                await _userManager.AddToRoleAsync(user, Role.User);
 
                 _logger.LogInformation($"User {dto.Email} registered.");
 
@@ -66,17 +77,15 @@ namespace SoundPlayer.Application.Services
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(userDto.Email);
-                if (user is null)
-                {
-                    throw new Exception("User not found!");
-                }
-
+                var user = await _userManager.FindByEmailAsync(userDto.Email) ?? throw new Exception("User not found!");
                 var result = await _signInManager.PasswordSignInAsync(user, userDto.Password, false, false);
 
-                if (!result.Succeeded) throw new Exception();
+                if (!result.Succeeded) throw new Exception("Invalid password");
+
                 var token = GenerateJwtToken(user);
-                _logger.LogInformation($"User '{userDto.Email}' logined.");
+
+                _logger.LogInformation($"User '{userDto.Email}' did login.");
+
                 return new BaseResponse<(UserDto, string)>()
                 {
                     IsSuccess = true,
@@ -86,14 +95,14 @@ namespace SoundPlayer.Application.Services
                             Id = user.Id,
                             Email = user.Email,
                             Login = user.UserName,
-                            CreatedAt = user.CreatedTime 
-                        }, token)
+                            CreatedAt = user.CreatedTime
+                        }, await token)
                 };
 
             }
             catch (Exception e)
             {
-                _logger.LogWarning($"User '{userDto.Email}' not logined. Exception : {e.Message}");
+                _logger.LogWarning($"User '{userDto.Email}' didn't' login. Exception : {e.Message}");
                 return new BaseResponse<(UserDto, string)>()
                 {
                     IsSuccess = false,
@@ -102,25 +111,31 @@ namespace SoundPlayer.Application.Services
             }
         }
 
-
-        private string GenerateJwtToken(ApplicationUser user)
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
-            var claims = new[]
+            var roles = await _signInManager.UserManager.GetRolesAsync(user);
+
+            var claims = new List<Claim>()
             {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.Name, user.UserName)
+                new (JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new (ClaimTypes.Name, user.UserName!)
             };
 
+            foreach (var role in roles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
                 _configuration["Jwt:Issuer"],
                 _configuration["Jwt:Audience"],
                 claims,
-                expires: DateTime.Now.AddHours(1),
-                signingCredentials: creds);
+                expires: DateTime.UtcNow.AddHours(1),
+                signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

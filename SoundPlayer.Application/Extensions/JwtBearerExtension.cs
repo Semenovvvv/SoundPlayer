@@ -50,23 +50,6 @@ namespace SoundPlayer.Application.Extensions
             );
         }
 
-        public static JwtSecurityToken CreateToken(this IConfiguration configuration, IEnumerable<Claim> authClaims)
-        {
-            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Secret"]!));
-            var tokenValidityInMinutes = configuration.GetSection(key: "Jwt:TokenValidityInMinutes").Get<int>();
-
-            var token = new JwtSecurityToken(
-                issuer: configuration["Jwt: Issuer"],
-                audience: configuration["Jwt: Audience"],
-                expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
-                claims: authClaims,
-                signingCredentials: new SigningCredentials( , algorithm: SecurityAlgorithms.HmacSha256)
-
-            );
-
-            return token;
-        }
-
         public static string GenerateRefreshToken(this IConfiguration configuration)
         {
             var randomNumber = new byte[64];
