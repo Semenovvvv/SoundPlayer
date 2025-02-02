@@ -1,10 +1,10 @@
-﻿using SoundPlayer.Domain.Interfaces;
-using SoundPlayer.Application.Services;
+﻿using SoundPlayer.Application.Services;
+using SoundPlayer.Domain.Interfaces;
 using IServiceCollection = Microsoft.Extensions.DependencyInjection.IServiceCollection;
 
-namespace SoundPlayer.Presentation
+namespace SoundPlayer.Extensions
 {
-    public static class ServiceCollectionExtension
+    public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddServices(this IServiceCollection services)
         {

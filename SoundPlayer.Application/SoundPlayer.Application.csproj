@@ -7,6 +7,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Grpc" Version="2.46.6" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
 	</ItemGroup>
 
@@ -14,5 +15,9 @@
     <ProjectReference Include="..\SoundPlayer.DAL\SoundPlayer.DAL.csproj" />
     <ProjectReference Include="..\SoundPlayer.Domain\SoundPlayer.Domain.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="..\SoundPlayer\Protos\*" Link="Protos\%(Filename)%(Extension)" GrpcService="Server" />
+	</ItemGroup>
 
 </Project>

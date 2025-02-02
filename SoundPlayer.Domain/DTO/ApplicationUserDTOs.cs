@@ -2,15 +2,19 @@
 {
     public class UserDto
     {
-        public string Username { get; set; }
+        public int Id { get; set; }
+        public string Login { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
-    public class LoginDto
+    public class LoginUserDto
     {
+        public int Id { get; set; }
+        public string Login { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 
     public class UpdateUserDto

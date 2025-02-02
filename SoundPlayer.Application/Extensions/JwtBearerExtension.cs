@@ -60,7 +60,7 @@ namespace SoundPlayer.Application.Extensions
                 audience: configuration["Jwt: Audience"],
                 expires: DateTime.Now.AddMinutes(tokenValidityInMinutes),
                 claims: authClaims,
-                signingCredentials: new SigningCredentials(authSigningKey, algorithm: SecurityAlgorithms.HmacSha256)
+                signingCredentials: new SigningCredentials( , algorithm: SecurityAlgorithms.HmacSha256)
 
             );
 

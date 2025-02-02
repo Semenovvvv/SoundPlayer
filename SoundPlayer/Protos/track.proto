@@ -8,8 +8,9 @@ import "Protos/ProtoEntities/track_entity.proto";
 import "google/protobuf/empty.proto";
 
 service TrackProto {
-  rpc UploadTrackChunks (stream AudioChunk) returns (MessageResponse);
-  rpc UploadTrackInfo (TrackInfo) returns (MessageResponse);
+  //rpc UploadTrackChunks (stream AudioChunk) returns (MessageResponse);
+  //rpc UploadTrackInfo (TrackInfo) returns (MessageResponse);
+  rpc UploadTrack (stream UploadTrackRequest) returns (UploadTrackResponse);
   rpc GetTrackInfo(TrackId) returns (TrackInfo);
   rpc GetTrackChunks(TrackId) returns (stream AudioChunk);
   rpc GetTrackList (GetTracksRequest) returns (GetTracksResponse);
@@ -18,11 +19,29 @@ service TrackProto {
   rpc GetTrackFormat (google.protobuf.Empty) returns (TrackFormat);
 }
 
-// UploadTrackFormat
-message UploadTrackFormatRequest{
+message UploadTrackRequest {
+  oneof data {
+    TrackInfo info = 1;
+    AudioChunk chunk = 2;
+  }
 }
-message UploadTrackFormatResponse{
+
+message TrackInfo {
+  string name = 1;
+  int32 userId = 2;
+  int32 durationInSeconds = 3;
 }
+
+message AudioChunk {
+  bytes data = 1;
+  bool isFinalChunk = 2;
+}
+
+message UploadTrackResponse {
+  string message = 1;
+  bool success = 2;
+}
+
 
 // GetTrackList
 message GetTracksRequest {
@@ -48,12 +67,6 @@ message StreamTrackRequest {
   int32 trackId = 1;
 }
 
-message AudioChunk {
-  bytes data = 1;
-  string fileName = 2;
-  bool isFinalChunk = 3;
-}
-
 message TrackFormat {
   int32 AverageBytesPerSecond = 1;
   int32 BitsPerSample = 2;
@@ -67,12 +80,6 @@ message TrackFormat {
 message MessageResponse{
 	bool success = 1;
 	string message = 2;
-}
-
-message TrackInfo{
-	string name = 1;
-	string userEmail = 2;
-	int32 durationInSeconds = 3;
 }
 
 message TrackId{

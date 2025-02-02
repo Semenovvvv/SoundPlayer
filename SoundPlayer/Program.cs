@@ -4,11 +4,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using SoundPlayer.Controllers;
 using SoundPlayer.DAL;
 using SoundPlayer.Domain.Entities;
-using SoundPlayer.Services;
+using SoundPlayer.Extensions;
+using SoundPlayer.GrpcServices;
 
-namespace SoundPlayer.Presentation
+namespace SoundPlayer
 {
     public class Program
     {
@@ -38,10 +40,19 @@ namespace SoundPlayer.Presentation
                     };
                 });
 
-            builder.Services.AddAuthorization(options => options.DefaultPolicy =
-                new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
-                    .RequireAuthenticatedUser()
-                    .Build());
+            builder.Services.AddAuthorization(options =>
+            {
+                options.DefaultPolicy =
+                    new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+                        .RequireAuthenticatedUser()
+                        .Build();
+
+                options.AddPolicy("Admin", policy =>
+                    policy.RequireRole("Admin"));
+
+                options.AddPolicy("User", policy =>
+                    policy.RequireRole("User", "Admin"));
+            });
 
             builder.Services.AddIdentity<ApplicationUser, IdentityRole<int>>()
                 .AddEntityFrameworkStores<AppDbContext>()
@@ -66,10 +77,10 @@ namespace SoundPlayer.Presentation
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.MapGrpcService<AuthGrpcService>();
-            app.MapGrpcService<PlaylistGrpcService>();
-            app.MapGrpcService<TrackGrpcService>();
-            app.MapGrpcService<UserGrpcService>();
+            app.MapGrpcService<AuthController>();
+            //app.MapGrpcService<PlaylistController>();
+            app.MapGrpcService<TrackController>();
+            app.MapGrpcService<UserController>();
 
             app.Run();
         }

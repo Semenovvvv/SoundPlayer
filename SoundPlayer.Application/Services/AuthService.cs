@@ -37,7 +37,7 @@ namespace SoundPlayer.Application.Services
             {
                 var user = new ApplicationUser
                 {
-                    UserName = dto.Username, 
+                    UserName = dto.Login, 
                     Email = dto.Email,
                     CreatedTime = DateTime.UtcNow
                 };
@@ -62,35 +62,39 @@ namespace SoundPlayer.Application.Services
             }
         }
 
-        public async Task<BaseResponse<string>> LoginUser(LoginDto dto)
+        public async Task<BaseResponse<(UserDto, string)>> LoginUser(UserDto userDto)
         {
             try
             {
-                var user = await _userManager.FindByEmailAsync(dto.Email);
+                var user = await _userManager.FindByEmailAsync(userDto.Email);
                 if (user is null)
                 {
                     throw new Exception("User not found!");
                 }
 
-                var result = await _signInManager.PasswordSignInAsync(user, dto.Password, false, false);
+                var result = await _signInManager.PasswordSignInAsync(user, userDto.Password, false, false);
 
-                if (result.Succeeded)
+                if (!result.Succeeded) throw new Exception();
+                var token = GenerateJwtToken(user);
+                _logger.LogInformation($"User '{userDto.Email}' logined.");
+                return new BaseResponse<(UserDto, string)>()
                 {
-                    var token = GenerateJwtToken(user);
-                    _logger.LogInformation($"User '{dto.Email}' logined.");
-                    return new BaseResponse<string>()
-                    {
-                        IsSuccess = true,
-                        Result = token
-                    };
-                }
+                    IsSuccess = true,
+                    Result = (
+                        new UserDto()
+                        {
+                            Id = user.Id,
+                            Email = user.Email,
+                            Login = user.UserName,
+                            CreatedAt = user.CreatedTime 
+                        }, token)
+                };
 
-                throw new Exception();
             }
             catch (Exception e)
             {
-                _logger.LogWarning($"User '{dto.Email}' not logined. Exception : {e.Message}");
-                return new BaseResponse<string>()
+                _logger.LogWarning($"User '{userDto.Email}' not logined. Exception : {e.Message}");
+                return new BaseResponse<(UserDto, string)>()
                 {
                     IsSuccess = false,
                     ErrorMessage = e.Message

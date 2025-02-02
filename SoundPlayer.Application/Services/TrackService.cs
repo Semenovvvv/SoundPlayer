@@ -41,10 +41,6 @@ namespace SoundPlayer.Application.Services
 
                 var user = await _userManager.FindByEmailAsync(dto.UserEmail);
 
-                //var user = await dbContext.Users
-                //    .AsNoTracking()
-                //    .FirstOrDefaultAsync(x => x.Email == dto.UserEmail);
-
                 if (user is null)
                 {
                     _logger.LogWarning($"Track information {dto.Name} don't loaded. User not found");
@@ -194,6 +190,26 @@ namespace SoundPlayer.Application.Services
                     Message = $"Error while getting tracks: {e.Message}"
                 };
             }
+        }
+
+        public async Task SaveTrackInfoAsync(TrackDto trackInfo, string filePath)
+        {
+            //var userId = await _userManager.FindByIdAsync(trackInfo.UserEmail);
+            //if (userId == null)
+            //{
+            //    throw new Exception($"User with email {trackInfo.UserEmail} not found.");
+            //}
+
+            //var track = new Track
+            //{
+            //    Name = trackInfo.Name,
+            //    UploadedByUserId = trackInfo.UserId,
+            //    Duration = trackInfo.Duration,
+            //    FilePath = filePath,
+            //    UploadDate = DateTime.UtcNow
+            //};
+
+            //await _trackRepository.SaveTrackAsync(track);
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using SoundPlayer.Domain.Interfaces;
-
-namespace SoundPlayer.Services
+﻿namespace SoundPlayer.GrpcServices
 {
     public class PlaylistGrpcService : PlaylistProto.PlaylistProtoBase
     {

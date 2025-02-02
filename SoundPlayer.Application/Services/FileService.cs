@@ -1,4 +1,5 @@
-﻿using SoundPlayer.Domain.DTO;
+﻿using Grpc.Core;
+using SoundPlayer.Domain.DTO;
 
 namespace SoundPlayer.Application.Services
 {
@@ -57,5 +58,40 @@ namespace SoundPlayer.Application.Services
                 await processChunk(chunk);
             }
         }
+
+        //public async Task<(TrackDto trackInfo, string tempFilePath)> SaveTrackFromStreamAsync(
+        //    IAsyncStreamReader<UploadTrackRequest> requestStream)
+        //{
+        //    TrackDto trackInfo = null;
+        //    var tempFilePath = Path.Combine(_tempDirectory, $"{Guid.NewGuid()}.tmp");
+
+        //    await using var fileStream = File.Create(tempFilePath);
+
+        //    await foreach (var request in requestStream.ReadAllAsync())
+        //    {
+        //        switch (request.DataCase)
+        //        {
+        //            case UploadTrackRequest.DataOneofCase.Info:
+        //                trackInfo = request.Info;
+        //                _logger.LogInformation($"Received track info: {trackInfo.Name}");
+        //                break;
+
+        //            case UploadTrackRequest.DataOneofCase.Chunk:
+        //                await fileStream.WriteAsync(request.Chunk.Data.ToByteArray());
+        //                if (request.Chunk.IsFinalChunk)
+        //                {
+        //                    _logger.LogInformation("Final chunk received.");
+        //                }
+        //                break;
+        //        }
+        //    }
+
+        //    if (trackInfo == null)
+        //    {
+        //        throw new Exception("Track info is missing in the stream.");
+        //    }
+
+        //    return (trackInfo, tempFilePath);
+        //}
     }
 }

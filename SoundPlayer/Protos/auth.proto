@@ -4,10 +4,12 @@ option csharp_namespace = "SoundPlayer";
 
 package soundplayer;
 
+import "google/protobuf/timestamp.proto";
+
 service AuthProto {
   rpc Register (RegisterRequest) returns (RegisterResponse);
   rpc Login (LoginRequest) returns (LoginResponse);
-  rpc Hello (HelloRequest) returns (HelloResponse);
+  rpc ValidateToken (TokenRequest) returns (TokenResponse);
 }
 
 message RegisterRequest {
@@ -26,13 +28,23 @@ message LoginRequest {
 }
 
 message LoginResponse {
+  bool isSuccess = 1;
+  User user = 2;
+  string token = 3;
+}
+
+message User {
+	int32 id = 1;
+	string login = 2;
+	string email = 3;
+	google.protobuf.Timestamp createdAt = 4;
+}
+
+message TokenRequest {
   string token = 1;
 }
 
-message HelloRequest{
-  string name = 1;
-}
-
-message HelloResponse{
-  string name = 1;
+message TokenResponse {
+  bool valid = 1;
+  User user = 2;
 }

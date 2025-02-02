@@ -1,13 +1,14 @@
-﻿using Grpc.Core;
+﻿using Google.Protobuf.WellKnownTypes;
+using Grpc.Core;
 using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Interfaces;
 
-namespace SoundPlayer.Services
+namespace SoundPlayer.GrpcServices
 {
-    public class AuthGrpcService : AuthProto.AuthProtoBase
+    public class AuthController : AuthProto.AuthProtoBase
     {
         private readonly IAuthService _authService;
-        public AuthGrpcService(IAuthService authService)
+        public AuthController(IAuthService authService)
         {
             _authService = authService;
         }
@@ -15,7 +16,7 @@ namespace SoundPlayer.Services
         {
             var response = await _authService.RegisterUser(new UserDto
             {
-                Username = request.Username,
+                Login = request.Username,
                 Email = request.Email,
                 Password = request.Password
             });
@@ -25,18 +26,27 @@ namespace SoundPlayer.Services
 
         public override async Task<LoginResponse> Login(LoginRequest request, ServerCallContext context)
         {
-            var response = await _authService.LoginUser(new LoginDto
+            var response = await _authService.LoginUser(new UserDto
             {
                 Email = request.Email,
                 Password = request.Password
             });
 
-            return new LoginResponse { Token = response.Result };
-        }
-
-        public override async Task<HelloResponse> Hello(HelloRequest request, ServerCallContext context)
-        {
-            return new HelloResponse { Name = $"Hello, {request.Name} "};
+            var user = response.Result.Item1;
+            var token = response.Result.Item2;
+                
+            return new LoginResponse
+            {
+                IsSuccess = response.IsSuccess,
+                Token = token,
+                User = new User()
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    Login = user.Login,
+                    CreatedAt = Timestamp.FromDateTime(user.CreatedAt)
+                }
+            };
         }
     }
 }
