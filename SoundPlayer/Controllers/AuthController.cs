@@ -36,7 +36,10 @@ namespace SoundPlayer.Controllers
 
             var user = response.Result.Item1;
             var token = response.Result.Item2;
-                
+
+            if (user == null || token == null)
+                throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+            
             return new LoginResponse
             {
                 IsSuccess = response.IsSuccess,

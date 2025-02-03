@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SoundPlayer.Application.Services;
 using SoundPlayer.DAL;
 using SoundPlayer.Domain.BE;
 using SoundPlayer.Domain.DTO;

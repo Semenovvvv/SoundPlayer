@@ -1,5 +1,7 @@
 ﻿using Google.Protobuf;
+using Grpc.AspNetCore.Web;
 using Grpc.Core;
+using Microsoft.AspNetCore.Authorization;
 using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Interfaces;
 
@@ -74,6 +76,7 @@ namespace SoundPlayer.Controllers
         //    }
         //}
 
+        //[Authorize(Roles = "User")]
         public override async Task<TrackInfo> GetTrackInfo(TrackId request, ServerCallContext context)
         {
             var response = await _trackService.GetTrackInfo(request.Id);
@@ -117,6 +120,7 @@ namespace SoundPlayer.Controllers
             }
         }
 
+        [Authorize(Policy = "Admin")]
         public override async Task<GetTracksResponse> GetTrackList(GetTracksRequest request, ServerCallContext context)
         {
             var result = await _trackService.GetTrackListByName(request.TrackName, request.PageNumber, request.PageSize);
