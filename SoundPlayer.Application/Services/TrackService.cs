@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Grpc.Core;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SoundPlayer.DAL;
@@ -27,24 +28,19 @@ namespace SoundPlayer.Application.Services
             _dbContextFactory = dbContextFactory;
             _logger = logger;
         }
-
-        public async Task SaveTrackChunkInDirectory(TrackChunk audioChunk, Guid trackGuid)
-        {
-            await _fileService.SaveBytes(audioChunk.Data, audioChunk.IsFinishChunk, trackGuid);
-        }
-
-        public async Task<BaseResponse> SaveTrackInfo(TrackDto dto)
+        
+        public async Task<BaseResponse<Track>> SaveTrackInfo(TrackDto dto, Guid uniqueName, DateTime createDate)
         {
             try
             {
                 await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
 
-                var user = await _userManager.FindByEmailAsync(dto.UserEmail);
+                var user = await _userManager.FindByIdAsync(dto.UserId.ToString());
 
                 if (user is null)
                 {
                     _logger.LogWarning($"Track information {dto.Name} don't loaded. User not found");
-                    return new BaseResponse
+                    return new BaseResponse<Track>
                     {
                         IsSuccess = false,
                         Message = $"Track information {dto.Name} don't loaded. User not found"
@@ -54,10 +50,10 @@ namespace SoundPlayer.Application.Services
                 var track = new Track()
                 {
                     Name = dto.Name,
-                    UploadDate = DateTime.UtcNow,
+                    UploadDate = createDate,
                     UploadedByUserId = user.Id,
                     Duration = dto.Duration,
-                    FilePath = ""
+                    UniqueName = uniqueName.ToString()
                 };
 
                 await dbContext.Tracks.AddAsync(track);
@@ -65,17 +61,18 @@ namespace SoundPlayer.Application.Services
 
                 _logger.LogInformation($"Track information {track.Name} was loaded");
 
-                return new BaseResponse
+                return new BaseResponse<Track>
                 {
                     IsSuccess = true,
-                    Message = $"Track information {track.Name} was loaded"
+                    Message = $"Track information {track.Name} was loaded",
+                    Result = track
                 };
             }
             catch (Exception e)
             {
                 _logger.LogInformation($"Track information {dto.Name} wasn't loaded. Exception : {e.Message}");
 
-                return new BaseResponse
+                return new BaseResponse<Track>
                 {
                     IsSuccess = false,
                     Message = $"Track information {dto.Name} wasn't loaded. Exception : {e.Message}"
@@ -103,8 +100,11 @@ namespace SoundPlayer.Application.Services
                     Result = new TrackDto()
                     {
                         Name = track.Name,
-                        UserEmail = track.UploadedByUser.Email,
-                        Duration = track.Duration
+                        UserEmail = track.UploadedByUser?.Email ?? "",
+                        UserName = track.UploadedByUser?.UserName ?? "",
+                        Duration = track.Duration,
+                        UniqueName = track.UniqueName,
+                        UploadDate = track.UploadDate
                     }
                 };
             }
@@ -118,26 +118,7 @@ namespace SoundPlayer.Application.Services
                 };
             }
         }
-
-        public async Task GetTrackChunks(int trackId, Func<byte[], Task> processChunk)
-        {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
-            var track = await dbContext.Tracks
-                .AsNoTracking()
-                .FirstOrDefaultAsync(t => t.Id == trackId);
-            //if (track == null)
-            //{
-            //    throw new FileNotFoundException($"Трек с ID {trackId} не найден.");
-            //}
-
-            //if (!_fileService.FileExists(track.FilePath))
-            //{
-            //    throw new FileNotFoundException($"Файл трека не найден: {track.FilePath}");
-            //}
-
-            await _fileService.GetBytes(track.FilePath, track.UploadDate.ToString("yyyy_MM_dd"), processChunk);
-        }
-
+        
         public async Task<BaseResponse<PaginatedResponse<TrackDto>>> GetTrackListByName(
             string trackName, 
             int pageNumber, 
@@ -190,26 +171,6 @@ namespace SoundPlayer.Application.Services
                     Message = $"Error while getting tracks: {e.Message}"
                 };
             }
-        }
-
-        public async Task SaveTrackInfoAsync(TrackDto trackInfo, string filePath)
-        {
-            //var userId = await _userManager.FindByIdAsync(trackInfo.UserEmail);
-            //if (userId == null)
-            //{
-            //    throw new Exception($"User with email {trackInfo.UserEmail} not found.");
-            //}
-
-            //var track = new Track
-            //{
-            //    Name = trackInfo.Name,
-            //    UploadedByUserId = trackInfo.UserId,
-            //    Duration = trackInfo.Duration,
-            //    FilePath = filePath,
-            //    UploadDate = DateTime.UtcNow
-            //};
-
-            //await _trackRepository.SaveTrackAsync(track);
         }
     }
 }

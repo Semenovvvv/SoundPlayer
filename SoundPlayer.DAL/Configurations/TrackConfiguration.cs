@@ -18,9 +18,12 @@ namespace SoundPlayer.DAL.Configurations
                 .HasMaxLength(50)
                 .IsRequired();
 
-            builder.Property(x => x.FilePath)
+            builder.Property(x => x.UniqueName)
                 .HasMaxLength(300)
                 .IsRequired();
+
+            builder.Navigation(x => x.UploadedByUser)
+                .AutoInclude();
         }
     }
 }

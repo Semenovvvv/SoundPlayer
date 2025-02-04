@@ -11,7 +11,12 @@ namespace SoundPlayer
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddGrpc();
+            builder.Services.AddGrpc(options =>
+            {
+                options.EnableDetailedErrors = true;
+                options.MaxReceiveMessageSize = 16 * 1024 * 1024;
+                options.MaxSendMessageSize = 16 * 1024 * 1024;
+            });
             builder.Services.AddGrpcReflection();
 
             builder.Services.AddDbContextFactory<AppDbContext>(options =>

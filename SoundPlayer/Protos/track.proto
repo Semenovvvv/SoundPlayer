@@ -4,44 +4,31 @@ option csharp_namespace = "SoundPlayer";
 
 package soundplayer;
 
-import "Protos/ProtoEntities/track_entity.proto";
 import "google/protobuf/empty.proto";
 
 service TrackProto {
-  //rpc UploadTrackChunks (stream AudioChunk) returns (MessageResponse);
-  //rpc UploadTrackInfo (TrackInfo) returns (MessageResponse);
-  rpc UploadTrack (stream UploadTrackRequest) returns (UploadTrackResponse);
-  rpc GetTrackInfo(TrackId) returns (TrackInfo);
-  rpc GetTrackChunks(TrackId) returns (stream AudioChunk);
+  rpc UploadTrack (stream TrackChunk) returns (UploadTrackResponse);
+  rpc DownloadTrack (TrackId) returns (stream TrackChunk);
+  
+  rpc GetTrackInfo(TrackId) returns (TrackMetadata);
   rpc GetTrackList (GetTracksRequest) returns (GetTracksResponse);
   rpc DeleteTrack (DeleteTrackRequest) returns (MessageResponse);
-  rpc StreamTrack (StreamTrackRequest) returns (stream AudioChunk);
-  rpc GetTrackFormat (google.protobuf.Empty) returns (TrackFormat);
 }
 
-message UploadTrackRequest {
+// Upload / Download
+message TrackChunk {
   oneof data {
-    TrackInfo info = 1;
-    AudioChunk chunk = 2;
+    TrackMetadata info = 1;
+    bytes chunks = 2;
   }
 }
 
-message TrackInfo {
-  string name = 1;
-  int32 userId = 2;
-  int32 durationInSeconds = 3;
-}
-
-message AudioChunk {
-  bytes data = 1;
-  bool isFinalChunk = 2;
-}
-
 message UploadTrackResponse {
-  string message = 1;
-  bool success = 2;
+  int32 track_id = 1;
+  string name = 2;
+  bool success = 3;
+  string message = 4;
 }
-
 
 // GetTrackList
 message GetTracksRequest {
@@ -54,7 +41,7 @@ message GetTracksResponse {
     int32 totalCount = 1;
     int32 pageNumber = 2;
     int32 pageSize = 3;
-    repeated TrackEntity tracks = 4;
+    repeated TrackMetadata tracks = 4;
 }
 
 // DeleteTrack
@@ -62,24 +49,23 @@ message DeleteTrackRequest {
   int32 trackId = 1;
 }
 
-// StreamTrack
-message StreamTrackRequest {
-  int32 trackId = 1;
+// Common
+message TrackMetadata {
+  int32 id = 1;
+  string name = 2;
+  int32 userId = 3;
+  string userName = 4;
+  int32 durationInSeconds = 5;
 }
 
-message TrackFormat {
-  int32 AverageBytesPerSecond = 1;
-  int32 BitsPerSample = 2;
-  int32 BlockAlign = 3;
-  int32 Channels = 4;
-  int32 ExtraSize = 5;
-  int32 SampleRate = 6;
-  string Encoding = 7;
+message AudioChunk {
+  bytes data = 1;
+  bool isFinalChunk = 2;
 }
 
 message MessageResponse{
-	bool success = 1;
-	string message = 2;
+  bool success = 1;
+  string message = 2;
 }
 
 message TrackId{

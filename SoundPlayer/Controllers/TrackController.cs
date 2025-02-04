@@ -1,7 +1,7 @@
 ﻿using Google.Protobuf;
-using Grpc.AspNetCore.Web;
 using Grpc.Core;
 using Microsoft.AspNetCore.Authorization;
+using SoundPlayer.Domain.Constants;
 using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Interfaces;
 
@@ -10,78 +10,153 @@ namespace SoundPlayer.Controllers
     public class TrackController : TrackProto.TrackProtoBase
     {
         private readonly ITrackService _trackService;
+        private readonly IFileService _fileService;
         private readonly ILogger<TrackController> _logger;
 
-        public TrackController(ITrackService trackService, ILogger<TrackController> logger)
+        public TrackController(ITrackService trackService, ILogger<TrackController> logger, IFileService fileService)
         {
+            _fileService = fileService;
             _trackService = trackService;
             _logger = logger;
         }
+        
+        [Authorize(Policy = Policy.User)]
+        public override async Task<UploadTrackResponse> UploadTrack(IAsyncStreamReader<TrackChunk> requestStream, ServerCallContext context)
+        {
+            var trackGuid = Guid.NewGuid();
+            var createDate = DateTime.UtcNow;
+            
+            try
+            {
+                TrackMetadata? metadata = null;
+                
+                await foreach (var chunk in requestStream.ReadAllAsync())
+                {
+                    switch (chunk.DataCase)
+                    {
+                        case TrackChunk.DataOneofCase.Info:
+                            metadata = chunk.Info;
+                            continue;
+                        case TrackChunk.DataOneofCase.Chunks:
+                            await _fileService.SaveChunkAsync(trackGuid, chunk.Chunks.ToByteArray());
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
 
-        //public override async Task<MessageResponse> UploadTrackInfo(TrackInfo request, ServerCallContext context)
-        //{
-        //    try
-        //    {
-        //        await _trackService.SaveTrackInfo(new TrackDto()
-        //        {
-        //            Name = request.Name,
-        //            UserId = request.UserId,
-        //            Duration = TimeSpan.FromSeconds(request.DurationInSeconds) 
-        //        });
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return new MessageResponse
-        //        {
-        //            Message = $"Fail",
-        //            Success = false
-        //        };
-        //    }
+                if (metadata == null)
+                {
+                    throw new RpcException(new Status(
+                        StatusCode.InvalidArgument, 
+                        "Metadata must be sent as first chunk"));
+                }
 
-        //    return new MessageResponse
-        //    {
-        //        Message = $"Success",
-        //        Success = true
-        //    };
-        //}
+                var dto = new TrackDto()
+                {
+                    Name = metadata.Name,
+                    UserId = metadata.UserId,
+                    UserName = metadata.UserName,
+                    Duration = TimeSpan.FromSeconds(metadata.DurationInSeconds)
+                };
 
-        //public override async Task<MessageResponse> UploadTrackChunks(IAsyncStreamReader<AudioChunk> requestStream, ServerCallContext context)
-        //{
-        //    try
-        //    {
-        //        var trackGuid = Guid.NewGuid();
+                var trackResponse =  await _trackService.SaveTrackInfo(dto, trackGuid, createDate);
 
-        //        await foreach (var chunk in requestStream.ReadAllAsync())
-        //        {
-        //            await _trackService.SaveTrackChunkInDirectory(new TrackChunk()
-        //            {
-        //                Data = chunk.Data.ToByteArray(),
-        //                IsFinishChunk = chunk.IsFinalChunk
-        //            }, trackGuid);
-        //        }
+                if (trackResponse.IsSuccess == false) throw new Exception(trackResponse.Message);
+                    
+                return new UploadTrackResponse
+                {
+                    TrackId = trackResponse.Result.Id,
+                    Name = trackResponse.Result.Name,
+                    Success = true,
+                    Message = "Track uploaded successfully"
+                };
+            }
+            catch (Exception ex)
+            {
+                await _fileService.DeleteTrackAsync(trackGuid, createDate);
+                _logger.LogError(ex, "Error uploading track");
+                return new UploadTrackResponse
+                {
+                    Success = false,
+                    Message = $"Upload failed: {ex.Message}"
+                };
+            }
+        }
 
-        //        return new MessageResponse
-        //        {
-        //            Message = $"File uploaded successfully.",
-        //            Success = true
-        //        };
-        //    }
-        //    catch
-        //    {
-        //        return new MessageResponse
-        //        {
-        //            Message = "Failed to upload the file.",
-        //            Success = false
-        //        };
-        //    }
-        //}
+        [Authorize(Policy = Policy.User)]
+        public override async Task DownloadTrack(TrackId request, IServerStreamWriter<TrackChunk> responseStream, ServerCallContext context)
+        {
+            try
+            {
+                var trackMetadata = await _trackService.GetTrackInfo(request.Id);
+                if (trackMetadata.IsSuccess == false || trackMetadata.Result == null)
+                {
+                    throw new RpcException(new Status(
+                        StatusCode.NotFound,
+                        $"Track with id {request.Id} not found. Ex = {trackMetadata.Message}"));
+                }
 
-        //[Authorize(Roles = "User")]
-        public override async Task<TrackInfo> GetTrackInfo(TrackId request, ServerCallContext context)
+                var track = trackMetadata.Result;
+
+                await responseStream.WriteAsync(new TrackChunk
+                {
+                    Info = new TrackMetadata
+                    {
+                        Id = track.Id,
+                        Name = track.Name,
+                        UserId = track.UserId,
+                        UserName = track.UserName,
+                        DurationInSeconds = track.Duration.Seconds
+                    }
+                });
+
+                const int chunkSize = 8;
+                var filePath = await _fileService.GetTrackPath(Guid.Parse(track.UniqueName), track.UploadDate);
+
+                await using var fileStream = new FileStream(
+                    filePath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read,
+                    bufferSize: chunkSize,
+                    useAsync: true);
+
+                var buffer = new byte[chunkSize];
+                int bytesRead;
+
+                while ((bytesRead = await fileStream.ReadAsync(buffer)) > 0)
+                {
+                    await responseStream.WriteAsync(new TrackChunk
+                    {
+                        Chunks = ByteString.CopyFrom(buffer, 0, bytesRead)
+                    });
+
+                    Array.Clear(buffer, 0, buffer.Length);
+                }
+            }
+            catch (FileNotFoundException ex)
+            {
+                _logger.LogError(ex, "Audio file not found");
+                throw new RpcException(new Status(
+                    StatusCode.NotFound,
+                    "Audio file not found"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during track download");
+                throw new RpcException(new Status(
+                    StatusCode.Internal, 
+                    $"Download failed. {ex.Message}"));
+            }
+        }
+
+        [Authorize(Policy = Policy.User)]
+        public override async Task<TrackMetadata> GetTrackInfo(TrackId request, ServerCallContext context)
         {
             var response = await _trackService.GetTrackInfo(request.Id);
             var trackDto = response.Result;
-            var trackInfo = new TrackInfo()
+            var trackInfo = new TrackMetadata()
             {
                 Name = trackDto.Name,
                 UserId = trackDto.UserId
@@ -89,38 +164,8 @@ namespace SoundPlayer.Controllers
 
             return trackInfo;
         }
-
-        public override async Task GetTrackChunks(TrackId request, IServerStreamWriter<AudioChunk> responseStream, ServerCallContext context)
-        {
-            try
-            {
-                await _trackService.GetTrackChunks(
-                    request.Id,
-                    async chunk =>
-                    {
-                        var trackChunk = new TrackChunk
-                        {
-                            Data = chunk
-                        };
-
-                        await responseStream.WriteAsync(new AudioChunk()
-                        {
-                            Data = ByteString.CopyFrom(trackChunk.Data),
-                            IsFinalChunk = trackChunk.IsFinishChunk
-                        });
-                    });
-            }
-            catch (FileNotFoundException ex)
-            {
-                throw new RpcException(new Status(StatusCode.NotFound, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                throw new RpcException(new Status(StatusCode.Internal, $"Ошибка передачи трека: {ex.Message}"));
-            }
-        }
-
-        [Authorize(Policy = "Admin")]
+        
+        [Authorize(Policy = Policy.User)]
         public override async Task<GetTracksResponse> GetTrackList(GetTracksRequest request, ServerCallContext context)
         {
             var result = await _trackService.GetTrackListByName(request.TrackName, request.PageNumber, request.PageSize);
@@ -135,45 +180,15 @@ namespace SoundPlayer.Controllers
                 TotalCount = result.Result.TotalCount,
                 PageNumber = result.Result.PageNumber,
                 PageSize = result.Result.PageSize,
-                Tracks = { result.Result.Items.Select(t => new TrackEntity
+                Tracks = { result.Result.Items.Select(t => new TrackMetadata()
                 {
-                    Id = t. Id,
+                    Id = t.Id,
                     Name = t.Name,
-                    UserEmail = t.UserEmail,
+                    UserId = t.UserId,
                     UserName = t.UserName,
-                    Duration = (int)t.Duration.TotalSeconds,
+                    DurationInSeconds = (int)t.Duration.TotalSeconds,
                 }) }
             };
         }
-
-        //public override Task<UploadTrackResponse> UploadTrack(IAsyncStreamReader<UploadTrackRequest> requestStream, ServerCallContext context)
-        //{
-        //    try
-        //    {
-        //        var (trackInfo, tempFilePath) = await _fileService.SaveTrackFromStreamAsync(requestStream);
-
-        //        if (trackInfo == null)
-        //        {
-        //            throw new RpcException(new Status(StatusCode.InvalidArgument, "Track info is missing."));
-        //        }
-
-        //        await _trackService.SaveTrackInfoAsync(trackInfo, tempFilePath);
-
-        //        return new UploadTrackResponse
-        //        {
-        //            Success = true,
-        //            Message = "Track uploaded successfully."
-        //        };
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error uploading track.");
-        //        return new UploadTrackResponse
-        //        {
-        //            Success = false,
-        //            Message = ex.Message
-        //        };
-        //    }
-        //}
     }
 }

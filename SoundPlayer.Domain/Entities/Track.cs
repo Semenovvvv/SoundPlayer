@@ -4,7 +4,7 @@
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string FilePath { get; set; }
+        public string UniqueName { get; set; }
         public TimeSpan Duration { get; set; }
         public DateTime UploadDate { get; set; } = DateTime.UtcNow;
         public int UploadedByUserId { get; set; }

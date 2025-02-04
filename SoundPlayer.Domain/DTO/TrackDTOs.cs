@@ -8,5 +8,7 @@
         public string UserEmail { get; set; }
         public string UserName { get; set; }
         public TimeSpan Duration { get; set; }
+        public string UniqueName { get; set; }
+        public DateTime UploadDate { get; set; }
     }
 }
