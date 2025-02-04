@@ -1,5 +1,0 @@
-{
-  "name": "{{ faker.name.last_name }}",
-  "userEmail": "auxiliary Avon channels",
-  "durationInSeconds": 16
-}

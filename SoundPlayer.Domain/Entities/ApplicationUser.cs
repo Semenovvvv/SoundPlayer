@@ -6,6 +6,8 @@ namespace SoundPlayer.Domain.Entities
     {
         public DateTime CreatedTime { get; set; }
         public ICollection<Track>? UploadedTracks { get; set; }
+        
+        public Playlist? FavoritePlaylist { get; set; }
         public ICollection<Playlist>? Playlists { get; set; }
     }
 }

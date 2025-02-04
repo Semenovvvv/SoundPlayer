@@ -1,9 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SoundPlayer.DAL;
-using SoundPlayer.Domain.BE;
+using SoundPlayer.Domain.Common;
 using SoundPlayer.Domain.DTO;
 using SoundPlayer.Domain.Entities;
 using SoundPlayer.Domain.Interfaces;
@@ -15,14 +14,15 @@ namespace SoundPlayer.Application.Services
         private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
         private readonly ILogger<TrackService> _logger;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly FileService _fileService;
+        private readonly IFileService _fileService;
 
         public TrackService(
             IDbContextFactory<AppDbContext> dbContextFactory,
             ILogger<TrackService> logger,
+            IFileService fileService,
             UserManager<ApplicationUser> userManager)
         {
-            _fileService = new FileService();
+            _fileService = fileService;
             _userManager = userManager;
             _dbContextFactory = dbContextFactory;
             _logger = logger;

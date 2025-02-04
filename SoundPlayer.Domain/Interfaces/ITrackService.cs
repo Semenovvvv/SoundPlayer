@@ -1,4 +1,4 @@
-﻿using SoundPlayer.Domain.BE;
+﻿using SoundPlayer.Domain.Common;
 using SoundPlayer.Domain.DTO;
 
 namespace SoundPlayer.Domain.Interfaces

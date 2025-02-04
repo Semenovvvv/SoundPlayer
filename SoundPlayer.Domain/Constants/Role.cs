@@ -1,4 +1,4 @@
-﻿namespace SoundPlayer.Domain.Common
+﻿namespace SoundPlayer.Domain.Constants
 {
     public static class Role
     {

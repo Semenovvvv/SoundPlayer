@@ -55,7 +55,7 @@ namespace SoundPlayer
             //app.MapGrpcService<PlaylistController>();
             app.MapGrpcService<TrackController>();
             app.MapGrpcService<UserController>();
-
+            
             await app.RunAsync();
         }
     }

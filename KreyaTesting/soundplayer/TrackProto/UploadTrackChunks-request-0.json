@@ -1,5 +1,0 @@
-{
-  "data": "UENJIExlZ2FjeSBHZW5lcmljIFNvZnQgQ2hpcHM=",
-  "fileName": "{{ faker.system.file_name }}",
-  "isFinalChunk": true
-}

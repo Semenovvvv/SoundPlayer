@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using SoundPlayer.DAL;
 using SoundPlayer.Domain.Entities;
-using Role = SoundPlayer.Domain.Common.Role;
+using Role = SoundPlayer.Domain.Constants.Role;
 
 namespace SoundPlayer
 {

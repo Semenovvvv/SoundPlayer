@@ -1,4 +1,4 @@
-﻿namespace SoundPlayer.Domain.BE
+﻿namespace SoundPlayer.Domain.Common
 {
         public class PaginatedResponse<T>
         {

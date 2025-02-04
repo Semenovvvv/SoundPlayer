@@ -8,6 +8,7 @@ using SoundPlayer.DAL;
 using SoundPlayer.Domain.Entities;
 using SoundPlayer.Domain.Interfaces;
 using System.Text;
+using SoundPlayer.Domain.Constants;
 
 namespace SoundPlayer.Extensions
 {
@@ -17,6 +18,9 @@ namespace SoundPlayer.Extensions
         {
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<ITrackService, TrackService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IPlaylistService, PlaylistService>();
+            services.AddScoped<IFileService, FileService>();
 
             return services;
         }
@@ -61,14 +65,17 @@ namespace SoundPlayer.Extensions
                         .RequireAuthenticatedUser()
                         .Build();
 
-                options.AddPolicy("Admin", policy =>
+                options.AddPolicy(Policy.Admin, policy =>
                 {
-                    policy.RequireRole("Admin");
+                    policy.RequireRole(Role.Admin);
                     policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
                 });
 
-                options.AddPolicy("Authorized", policy =>
-                    policy.RequireAuthenticatedUser());
+                options.AddPolicy(Policy.User, policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                    policy.AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme);
+                });
             });
 
             return services;

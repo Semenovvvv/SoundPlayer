@@ -6,17 +6,19 @@ using SoundPlayer.Domain.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using SoundPlayer.Domain.BE;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SoundPlayer.Domain.Common;
+using SoundPlayer.Domain.Constants;
 
 namespace SoundPlayer.Application.Services
 {
+    /// <inheritdoc cref="IAuthService"/>
     public class AuthService : IAuthService
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<AuthService> _logger;
+        private readonly IPlaylistService _playlistService;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
 
@@ -24,15 +26,17 @@ namespace SoundPlayer.Application.Services
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration configuration,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            IPlaylistService playlistService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
             _logger = logger;
+            _playlistService = playlistService;
         }
 
-        public async Task<BaseResponse<bool>> RegisterUser(UserDto dto)
+        public async Task<BaseResponse> RegisterUser(UserDto dto)
         {
             try
             {
@@ -53,23 +57,17 @@ namespace SoundPlayer.Application.Services
                 if (!result.Succeeded) throw new Exception("Invalid data");
 
                 await _userManager.AddToRoleAsync(user, Role.User);
-
                 _logger.LogInformation($"User {dto.Email} registered.");
+                
+                var response = await _playlistService.CreateFavoritePlaylist(user.Id);
+                _logger.LogInformation($"User favorite playlist{(response.IsSuccess ? "" : " not")} created. {(response.IsSuccess ? "" : response.Message)}");
 
-                return new BaseResponse<bool>()
-                {
-                    Result = result.Succeeded,
-                    IsSuccess = true
-                };
+                return new BaseResponse(true);
             }
             catch (Exception e)
             {
                 _logger.LogInformation($"User {dto.Email} not registered. Exception : {e.Message}");
-                return new BaseResponse<bool>()
-                {
-                    IsSuccess = false,
-                    ErrorMessage = e.Message
-                };
+                return new BaseResponse(false, e.Message);
             }
         }
 
@@ -79,11 +77,8 @@ namespace SoundPlayer.Application.Services
             {
                 var user = await _userManager.FindByEmailAsync(userDto.Email) ?? throw new Exception("User not found!");
                 var result = await _signInManager.PasswordSignInAsync(user, userDto.Password, false, false);
-
                 if (!result.Succeeded) throw new Exception("Invalid password");
-
                 var token = GenerateJwtToken(user);
-
                 _logger.LogInformation($"User '{userDto.Email}' did login.");
 
                 return new BaseResponse<(UserDto, string)>()
@@ -98,7 +93,6 @@ namespace SoundPlayer.Application.Services
                             CreatedAt = user.CreatedTime
                         }, await token)
                 };
-
             }
             catch (Exception e)
             {
@@ -106,7 +100,7 @@ namespace SoundPlayer.Application.Services
                 return new BaseResponse<(UserDto, string)>()
                 {
                     IsSuccess = false,
-                    ErrorMessage = e.Message
+                    Message = e.Message
                 };
             }
         }

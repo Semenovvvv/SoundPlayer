@@ -1,4 +1,0 @@
-{
-  "name": "{{ faker.name.last_name }}",
-  "userId": 256
-}
