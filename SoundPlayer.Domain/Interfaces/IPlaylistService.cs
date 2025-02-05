@@ -11,8 +11,8 @@ namespace SoundPlayer.Domain.Interfaces
         /// </summary>
         /// <param name="userId">Id пользователя</param>
         /// <param name="name">Название плейлиста</param>
-        /// <returns>BaseResponse(IsSuccess, Message)</returns>
-        public Task<BaseResponse> CreatePlaylist(int userId, string name);
+        /// <returns>BaseResponse'PlaylistDto'</returns>
+        public Task<BaseResponse<Playlist>> CreatePlaylist(int userId, string name);
 
         /// <summary>
         /// Создает плейлист с любимыми треками
@@ -26,7 +26,7 @@ namespace SoundPlayer.Domain.Interfaces
         /// </summary>
         /// <param name="id">Id плейлиста</param>
         /// <returns>Playlist</returns>
-        public Task<Playlist?> GetPlaylist(int id);
+        public Task<PlaylistDto?> GetPlaylist(int id);
 
         /// <summary>
         /// Выполняет получение коллекции плейлистов пользователя

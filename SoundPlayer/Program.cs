@@ -57,7 +57,7 @@ namespace SoundPlayer
             app.UseAuthorization();
 
             app.MapGrpcService<AuthController>();
-            //app.MapGrpcService<PlaylistController>();
+            app.MapGrpcService<PlaylistController>();
             app.MapGrpcService<TrackController>();
             app.MapGrpcService<UserController>();
             

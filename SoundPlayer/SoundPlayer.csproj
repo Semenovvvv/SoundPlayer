@@ -36,4 +36,20 @@
 		<Protobuf Include="Protos\ProtoEntities\track_entity.proto" GrpcServices="None" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Remove="Tracks\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Remove="Tracks\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Content Remove="Tracks\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="Tracks\**" />
+	</ItemGroup>
+
 </Project>

@@ -27,5 +27,17 @@ namespace SoundPlayer.Domain.Interfaces
         /// <param name="userId">Id пользователя</param>
         /// <returns>BaseResponse(IsSuccess, Message)</returns>
         public Task<BaseResponse> DeleteUser(string userId);
+
+        /// <summary>
+        /// Получить список пользователей по паттерну userName
+        /// </summary>
+        /// <param name="userNamePattern">Паттерн поиска</param>
+        /// <param name="pageNumber">Номер страницы</param>
+        /// <param name="pageSize">Размер страницы</param>
+        /// <returns>Пагинационный список пользователей</returns>
+        public Task<PaginatedResponse<ApplicationUser>> GetUsersByName(
+            string userNamePattern,
+            int pageNumber,
+            int pageSize);
     }
 }

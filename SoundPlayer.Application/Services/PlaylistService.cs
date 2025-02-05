@@ -24,25 +24,48 @@ namespace SoundPlayer.Application.Services
             _userService = userService;
         }
         
-        public async Task<BaseResponse> CreatePlaylist(int userId, string name)
+        public async Task<BaseResponse<Playlist>> CreatePlaylist(int userId, string name)
         {
-            var user = await _userService.GetUserById(userId);
-
-            if (user == null)
-                return new BaseResponse(false, "User not found");
-
-            await using (var dbContext = await _dbFactory.CreateDbContextAsync())
+            try
             {
-                dbContext.Playlists.Add(new Playlist()
+                var user = await _userService.GetUserById(userId);
+
+                if (user == null)
+                    return new BaseResponse<Playlist>()
+                    {
+                        IsSuccess = false,
+                        Message = "User not found"
+                    };
+
+                var playlist = new Playlist()
                 {
                     Name = name,
                     CreatedBy = user,
                     CreatedByUserId = user.Id
-                });
-                await dbContext.SaveChangesAsync();
-            }
+                };
+                
+                await using (var dbContext = await _dbFactory.CreateDbContextAsync())
+                {
+                    dbContext.Playlists.Add(playlist);
+                    await dbContext.SaveChangesAsync();
+                }
 
-            return new BaseResponse(true, "Playlist created");
+                return new BaseResponse<Playlist>()
+                {
+                    IsSuccess = true,
+                    Message = "Playlist created",
+                    Result = playlist
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Playlist didnt created. Exception = {ex.Message}");
+                return new BaseResponse<Playlist>
+                {
+                    IsSuccess = false,
+                    Message = ex.Message
+                };
+            }
         }
 
         public async Task<BaseResponse> CreateFavoritePlaylist(int userId)
@@ -65,10 +88,21 @@ namespace SoundPlayer.Application.Services
             return new BaseResponse(true, "Playlist created");
         }
         
-        public async Task<Playlist?> GetPlaylist(int id)
+        public async Task<PlaylistDto?> GetPlaylist(int id)
         {
             await using var dbContext = await _dbFactory.CreateDbContextAsync();
-            return await dbContext.Playlists.FirstOrDefaultAsync(x => x.Id == id);
+            var playlist =  await dbContext.Playlists.FirstOrDefaultAsync(x => x.Id == id);
+            if (playlist == null) return null;
+
+            var trackCount = playlist.PlaylistTracks != null ? playlist.PlaylistTracks.Count : 0;
+
+            return new PlaylistDto()
+            {
+                Id = playlist.Id,
+                CreatedByUserId = playlist.CreatedByUserId,
+                Name = playlist.Name,
+                TrackCount = trackCount
+            };
         }
 
         public async Task<IEnumerable<Playlist>> GetPlaylistsByUserId(int userId)

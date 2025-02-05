@@ -5,26 +5,46 @@ option csharp_namespace = "SoundPlayer";
 package soundplayer;
 
 service UserProto {
-  rpc GetUserProfile (UserProfileRequest) returns (UserProfileResponse);
-  rpc UpdateUserProfile (UpdateUserProfileRequest) returns (UpdateUserProfileResponse);
+  rpc GetUserById (UserRequest) returns (UserResponse);
+  rpc UpdateUser (UpdateUserRequest) returns (UpdateUserResponse);
+  rpc GetUserList (GetUserRequest) returns (GetUserResponse);
 }
 
-message UserProfileRequest {
+message UserRequest {
   int32 userId = 1;
 }
 
-message UserProfileResponse {
+message UserResponse {
   int32 userId = 1;
   string username = 2;
   string email = 3;
 }
 
-message UpdateUserProfileRequest {
+message UpdateUserRequest {
   int32 userId = 1;
   string newUsername = 2;
   string newEmail = 3;
 }
 
-message UpdateUserProfileResponse {
+message UpdateUserResponse {
   bool success = 1;
+}
+
+message GetUserRequest{
+  string userName = 1;
+  int32 pageNumber = 2;
+  int32 pageSize = 3;
+}
+
+message GetUserResponse{
+  int32 totalCount = 1;
+  int32 pageNumber = 2;
+  int32 pageSize = 3;
+  repeated UserMetadata users = 4;
+}
+
+message UserMetadata{
+  int32 id = 1;
+  string userName = 2;
+  string userEmail = 3;
 }

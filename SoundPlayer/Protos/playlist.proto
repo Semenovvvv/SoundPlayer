@@ -10,7 +10,8 @@ service PlaylistProto {
   rpc CreatePlaylist (CreatePlaylistRequest) returns (CreatePlaylistResponse);
   rpc AddTrackToPlaylist (AddTrackRequest) returns (AddTrackResponse);
   rpc RemoveTrackFromPlaylist (RemoveTrackRequest) returns (RemoveTrackResponse);
-  rpc GetPlaylist (GetPlaylistRequest) returns (GetPlaylistResponse);
+  rpc GetPlaylist (PlaylistId) returns (GetPlaylistResponse);
+  rpc DeletePlaylist (PlaylistId) returns (GetPlaylistResponse);
 }
 
 message CreatePlaylistRequest {
@@ -42,13 +43,13 @@ message RemoveTrackResponse {
   bool success = 1;
 }
 
-message GetPlaylistRequest {
-  int32 playlistId = 1;
-}
-
 message GetPlaylistResponse {
 	bool isSuccess = 1;
 	int32 playlistId = 2;
 	string playlistName = 3;
-	repeated TrackEntity tracks = 4;
+  int32 trackCount = 4;
+}
+
+message PlaylistId{
+  int32 id = 1;
 }

@@ -10,7 +10,7 @@ namespace SoundPlayer.Domain.Interfaces
         
         public Task<BaseResponse<TrackDto>> GetTrackInfo(int id);
 
-        public Task<BaseResponse<PaginatedResponse<TrackDto>>> GetTrackListByName(
+        public Task<PaginatedResponse<TrackDto>> GetTrackListByName(
             string trackName,
             int pageNumber,
             int pageSize);

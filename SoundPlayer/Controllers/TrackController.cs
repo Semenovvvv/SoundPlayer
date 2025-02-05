@@ -155,6 +155,12 @@ namespace SoundPlayer.Controllers
         public override async Task<TrackMetadata> GetTrackInfo(TrackId request, ServerCallContext context)
         {
             var response = await _trackService.GetTrackInfo(request.Id);
+
+            if (response == null || response.Result == null)
+            {
+                throw new RpcException(new Status(StatusCode.NotFound, "Track not found"));
+            }
+            
             var trackDto = response.Result;
             var trackInfo = new TrackMetadata()
             {
@@ -177,10 +183,10 @@ namespace SoundPlayer.Controllers
 
             return new GetTracksResponse
             {
-                TotalCount = result.Result.TotalCount,
-                PageNumber = result.Result.PageNumber,
-                PageSize = result.Result.PageSize,
-                Tracks = { result.Result.Items.Select(t => new TrackMetadata()
+                TotalCount = result.TotalCount,
+                PageNumber = result.PageNumber,
+                PageSize = result.PageSize,
+                Tracks = { result.Items.Select(t => new TrackMetadata()
                 {
                     Id = t.Id,
                     Name = t.Name,

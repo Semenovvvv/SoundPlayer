@@ -56,11 +56,13 @@ namespace SoundPlayer.Application.Services
                     UniqueName = uniqueName.ToString()
                 };
 
+                var trackCopy = (Track)track.Clone();
+
                 await dbContext.Tracks.AddAsync(track);
                 await dbContext.SaveChangesAsync();
 
                 _logger.LogInformation($"Track information {track.Name} was loaded");
-
+                
                 return new BaseResponse<Track>
                 {
                     IsSuccess = true,
@@ -119,7 +121,7 @@ namespace SoundPlayer.Application.Services
             }
         }
         
-        public async Task<BaseResponse<PaginatedResponse<TrackDto>>> GetTrackListByName(
+        public async Task<PaginatedResponse<TrackDto>> GetTrackListByName(
             string trackName, 
             int pageNumber, 
             int pageSize)
@@ -148,16 +150,14 @@ namespace SoundPlayer.Application.Services
                     })
                     .ToListAsync();
 
-                return new BaseResponse<PaginatedResponse<TrackDto>>()
+                return new PaginatedResponse<TrackDto>()
                 {
                     IsSuccess = true,
-                    Result = new PaginatedResponse<TrackDto>()
-                    {
-                        Items = tracks,
-                        TotalCount = totalRescord,
-                        PageNumber = pageNumber,
-                        PageSize = pageSize
-                    }
+                    
+                    Items = tracks,
+                    TotalCount = totalRescord,
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
                 };
 
             }
@@ -165,7 +165,7 @@ namespace SoundPlayer.Application.Services
             {
                 _logger.LogWarning($"Error while getting tracks by name '{trackName}': {e.Message}");
 
-                return new BaseResponse<PaginatedResponse<TrackDto>>
+                return new PaginatedResponse<TrackDto>
                 {
                     IsSuccess = false,
                     Message = $"Error while getting tracks: {e.Message}"
