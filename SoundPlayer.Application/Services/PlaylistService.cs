@@ -192,5 +192,32 @@ namespace SoundPlayer.Application.Services
                 return new BaseResponse(false, ex.Message);
             }
         }
+
+        public async Task<PaginatedResponse<Track>> GetTrackList(int playlistId, int pageSize, int pageNumber)
+        {
+            await using var dbContext = await _dbFactory.CreateDbContextAsync();
+
+            var playlist = await dbContext.Playlists.FirstOrDefaultAsync(x => x.Id == playlistId)
+                           ?? throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
+
+            var a = playlist.PlaylistTracks;
+            
+            var tracks = playlist.PlaylistTracks
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => x.Track)
+                .AsQueryable();
+
+            var totalCount = playlist.PlaylistTracks.Count;
+
+            return new PaginatedResponse<Track>()
+            {
+                IsSuccess = true,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Items = tracks.AsEnumerable()
+            };
+        }
     }
 }

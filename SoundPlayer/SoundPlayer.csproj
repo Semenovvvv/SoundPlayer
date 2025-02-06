@@ -11,13 +11,11 @@
 	<ItemGroup>
 		<PackageReference Include="Grpc.AspNetCore" Version="2.57.0" />
 		<PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.67.0" />
-		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.67.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.11" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
 		<PackageReference Include="NAudio" Version="2.2.1" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
 	</ItemGroup>
@@ -33,7 +31,7 @@
 		<Protobuf Include="Protos\playlist.proto" GrpcService="Server" />
 		<Protobuf Include="Protos\track.proto" GrpcService="Server" />
 		<Protobuf Include="Protos\user.proto" GrpcService="Server" />
-		<Protobuf Include="Protos\ProtoEntities\track_entity.proto" GrpcServices="None" />
+		<Protobuf Include="Protos\ProtoEntities\track_metadata.proto" GrpcService="None" />
 	</ItemGroup>
 
 	<ItemGroup>

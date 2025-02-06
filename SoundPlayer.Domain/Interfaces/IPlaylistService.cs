@@ -58,5 +58,7 @@ namespace SoundPlayer.Domain.Interfaces
         /// <param name="trackId">Id трека</param>
         /// <returns>BaseResponse</returns>
         public Task<BaseResponse> DeleteTrackFromPlaylist(int playlistId, int trackId);
+        
+        public Task<PaginatedResponse<Track>> GetTrackList(int playlistId, int pageSize, int pageNumber);
     }
 }

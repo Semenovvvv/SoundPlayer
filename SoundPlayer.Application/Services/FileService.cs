@@ -21,7 +21,7 @@ namespace SoundPlayer.Application.Services
         {
             var directoryPath = @$"{_trackPath}\{DateTime.UtcNow:yyyy_MM_dd}";
             
-            if (!Directory.Exists(_trackPath.ToString()))
+            if (!Directory.Exists(directoryPath))
             {
                 Directory.CreateDirectory(directoryPath);
             }

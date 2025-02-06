@@ -12,8 +12,8 @@ using SoundPlayer.DAL;
 namespace SoundPlayer.DAL.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250205114043_FixProperties")]
-    partial class FixProperties
+    [Migration("20250206182845_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

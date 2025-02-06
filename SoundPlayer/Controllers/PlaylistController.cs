@@ -61,16 +61,42 @@ namespace SoundPlayer.Controllers
             return response;
         }
 
-        public override async Task<DeleteTrackResponse> DeleteTrackFromPlaylist(DeleteTrackRequest request, ServerCallContext context)
+        public override async Task<DeleteTrackRes> DeleteTrackFromPlaylist(DeleteTrackReq request, ServerCallContext context)
         {
             var playlistId = request.PlaylistId;
             var trackId = request.TrackId;
 
             var result = await _playlistService.DeleteTrackFromPlaylist(playlistId, trackId);
-
-            var response = new DeleteTrackResponse()
+            return new DeleteTrackRes()
             {
+                Success = result.IsSuccess
+            };
+        }
 
+        public override async Task<GetTrackListResponse> GetTrackList(GetTrackListRequest request, ServerCallContext context)
+        {
+            var playlistId = request.PlaylistId;
+            var pageSize = request.PageSize;
+            var pageNumber = request.PageNumber;
+
+            var tracks = await _playlistService.GetTrackList(playlistId, pageSize, pageNumber);
+
+            return new GetTrackListResponse()
+            {
+                TotalCount = tracks.TotalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Tracks =
+                {
+                    tracks.Items.Select(x => new TrackMetadata()
+                    {
+                        Id = x.Id,
+                        Name = x.Name,
+                        UserId = x.UploadedByUserId,
+                        DurationInSeconds = x.Duration.Seconds,
+                        UserName = x.UploadedByUser?.UserName ?? string.Empty
+                    })
+                }
             };
         }
     }

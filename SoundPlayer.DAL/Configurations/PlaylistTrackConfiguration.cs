@@ -17,6 +17,12 @@ namespace SoundPlayer.DAL.Configurations
             builder.HasOne(x => x.Track)
                 .WithMany()
                 .HasForeignKey(x => x.TrackId);
+
+            builder.Navigation(x => x.Playlist)
+                .AutoInclude();
+
+            builder.Navigation(x => x.Track)
+                .AutoInclude();
         }
     }
 }

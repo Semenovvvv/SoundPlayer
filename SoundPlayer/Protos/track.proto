@@ -5,11 +5,11 @@ option csharp_namespace = "SoundPlayer";
 package soundplayer;
 
 import "google/protobuf/empty.proto";
+import "Protos/ProtoEntities/track_metadata.proto";
 
 service TrackProto {
   rpc UploadTrack (stream TrackChunk) returns (UploadTrackResponse);
   rpc DownloadTrack (TrackId) returns (stream TrackChunk);
-  
   rpc GetTrackInfo(TrackId) returns (TrackMetadata);
   rpc GetTrackList (GetTracksRequest) returns (GetTracksResponse);
   rpc DeleteTrack (DeleteTrackRequest) returns (MessageResponse);
@@ -50,13 +50,6 @@ message DeleteTrackRequest {
 }
 
 // Common
-message TrackMetadata {
-  int32 id = 1;
-  string name = 2;
-  int32 userId = 3;
-  string userName = 4;
-  int32 durationInSeconds = 5;
-}
 
 message AudioChunk {
   bytes data = 1;

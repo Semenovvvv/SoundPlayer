@@ -13,6 +13,9 @@ namespace SoundPlayer.DAL.Configurations
             builder.HasOne(x => x.CreatedBy)
                 .WithMany(x => x.Playlists)
                 .HasForeignKey(x => x.CreatedByUserId);
+
+            builder.Navigation(x => x.PlaylistTracks)
+                .AutoInclude();
         }
     }
 }

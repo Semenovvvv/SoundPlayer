@@ -4,10 +4,10 @@ option csharp_namespace = "SoundPlayer";
 
 package soundplayer;
 
-message TrackEntity {
+message TrackMetadata {
   int32 id = 1;
   string name = 2;
-  string userEmail = 3;
+  int32 userId = 3;
   string userName = 4;
-  int32 duration = 5;
+  int32 durationInSeconds = 5;
 }
