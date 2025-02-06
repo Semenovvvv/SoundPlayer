@@ -42,5 +42,21 @@ namespace SoundPlayer.Domain.Interfaces
         /// <param name="dto">Данные для изменения</param>
         /// <returns>BaseResponse(IsSuccess, Message)</returns>
         public Task<BaseResponse> UpdatePlaylist(int id, PlaylistDto dto);
+
+        /// <summary>
+        /// Добавить трек в плейлист
+        /// </summary>
+        /// <param name="playlistId">Id плейлиста</param>
+        /// <param name="trackId">Id трека</param>
+        /// <returns>BaseResponse(IsSuccess, Message)</returns>
+        public Task<BaseResponse> AddTrackToPlaylist(int playlistId, int trackId);
+
+        /// <summary>
+        /// Удалить трек из плейлиста
+        /// </summary>
+        /// <param name="playlistId">Id плейлиста</param>
+        /// <param name="trackId">Id трека</param>
+        /// <returns>BaseResponse</returns>
+        public Task<BaseResponse> DeleteTrackFromPlaylist(int playlistId, int trackId);
     }
 }

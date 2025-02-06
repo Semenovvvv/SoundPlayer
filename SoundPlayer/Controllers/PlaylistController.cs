@@ -45,5 +45,33 @@ namespace SoundPlayer.Controllers
                 IsSuccess = true
             };
         }
+
+        public override async Task<AddTrackResponse> AddTrackToPlaylist(AddTrackRequest request, ServerCallContext context)
+        {
+            var playlistId = request.PlaylistId;
+            var trackId = request.TrackId;
+
+            var result = await _playlistService.AddTrackToPlaylist(playlistId, trackId);
+
+            var response = new AddTrackResponse()
+            {
+                Success = result.IsSuccess
+            };
+
+            return response;
+        }
+
+        public override async Task<DeleteTrackResponse> DeleteTrackFromPlaylist(DeleteTrackRequest request, ServerCallContext context)
+        {
+            var playlistId = request.PlaylistId;
+            var trackId = request.TrackId;
+
+            var result = await _playlistService.DeleteTrackFromPlaylist(playlistId, trackId);
+
+            var response = new DeleteTrackResponse()
+            {
+
+            };
+        }
     }
 }

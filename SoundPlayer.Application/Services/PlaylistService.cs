@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Grpc.Core;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SoundPlayer.DAL;
 using SoundPlayer.Domain.Common;
@@ -40,7 +41,6 @@ namespace SoundPlayer.Application.Services
                 var playlist = new Playlist()
                 {
                     Name = name,
-                    CreatedBy = user,
                     CreatedByUserId = user.Id
                 };
                 
@@ -125,6 +125,72 @@ namespace SoundPlayer.Application.Services
             }
 
             return new BaseResponse(true, "Playlist updated");
+        }
+
+        public async Task<BaseResponse> AddTrackToPlaylist(int playlistId, int trackId)
+        {
+            await using var dbContext = await _dbFactory.CreateDbContextAsync();
+
+            var playlist = await dbContext.Playlists.FirstOrDefaultAsync(x => x.Id == playlistId)
+                ?? throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
+
+            var track = await dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == trackId)
+                ?? throw new RpcException(new Status(StatusCode.NotFound, "Track not found"));
+
+            try
+            {
+                var playlistTrack = new PlaylistTrack()
+                {
+                    PlaylistId = playlistId,
+                    TrackId = trackId
+                };
+
+                dbContext.PlaylistTracks.Add(playlistTrack);
+                await dbContext.SaveChangesAsync();
+
+                return new BaseResponse()
+                {
+                    IsSuccess = true,
+                    Message = "Track added to playlist successfully"
+                };
+            }
+            catch (Exception ex)
+            {
+                return new BaseResponse()
+                {
+                    IsSuccess = false,
+                    Message = ex.Message
+                };
+            }
+        }
+
+        public async Task<BaseResponse> DeleteTrackFromPlaylist(int playlistId, int trackId)
+        {
+            await using var dbContext = await _dbFactory.CreateDbContextAsync();
+
+            var playlist = await dbContext.Playlists.FirstOrDefaultAsync(x => x.Id == playlistId)
+                           ?? throw new RpcException(new Status(StatusCode.NotFound, "Playlist not found"));
+
+            var track = await dbContext.Tracks.FirstOrDefaultAsync(x => x.Id == trackId)
+                        ?? throw new RpcException(new Status(StatusCode.NotFound, "Track not found"));
+            
+            try
+            {
+                var playlistTrack = await dbContext.PlaylistTracks
+                    .FirstOrDefaultAsync(x => x.Playlist == playlist && x.Track == track)
+                    ?? throw new RpcException(new Status(StatusCode.NotFound, "PlaylistTrack not found"));
+                
+                                
+                dbContext.PlaylistTracks.Remove(playlistTrack);
+                await dbContext.SaveChangesAsync();
+
+                return new BaseResponse(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Track didnt deleted from playlist. Exception = {ex.Message}");
+                return new BaseResponse(false, ex.Message);
+            }
         }
     }
 }
